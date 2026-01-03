@@ -1,3 +1,4 @@
+import { RootProvider } from "fumadocs-ui/provider/react-router";
 import {
   isRouteErrorResponse,
   Links,
@@ -6,7 +7,6 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-import { RootProvider } from "fumadocs-ui/provider/react-router";
 import type { Route } from "./+types/root";
 import "./app.css";
 import SearchDialog from "@/components/search";

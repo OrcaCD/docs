@@ -1,4 +1,5 @@
-import type { Route } from "./+types/page";
+import browserCollections from "fumadocs-mdx:collections/browser";
+import { useFumadocsLoader } from "fumadocs-core/source/client";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import {
   DocsBody,
@@ -6,11 +7,10 @@ import {
   DocsPage,
   DocsTitle,
 } from "fumadocs-ui/layouts/docs/page";
-import { source } from "@/lib/source";
 import defaultMdxComponents from "fumadocs-ui/mdx";
-import browserCollections from "fumadocs-mdx:collections/browser";
 import { baseOptions } from "@/lib/layout.shared";
-import { useFumadocsLoader } from "fumadocs-core/source/client";
+import { source } from "@/lib/source";
+import type { Route } from "./+types/page";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const slugs = params["*"].split("/").filter((v) => v.length > 0);

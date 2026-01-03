@@ -1,17 +1,39 @@
-import { reactRouter } from "@react-router/dev/vite";
+import react from "@vitejs/plugin-react";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import { defineConfig } from "vite";
+import tsConfigPaths from "vite-tsconfig-paths";
 import tailwindcss from "@tailwindcss/vite";
 import mdx from "fumadocs-mdx/vite";
-import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
-import * as MdxConfig from "./source.config";
 
 export default defineConfig({
+  server: {
+    port: 3000,
+  },
   plugins: [
-    mdx(MdxConfig),
+    mdx(await import("./source.config")),
     tailwindcss(),
-    reactRouter(),
-    tsconfigPaths({
-      root: __dirname,
+    tsConfigPaths({
+      projects: ["./tsconfig.json"],
     }),
+    tanstackStart({
+      spa: {
+        enabled: true,
+        prerender: {
+          outputPath: "index.html",
+          enabled: true,
+          crawlLinks: true,
+        },
+      },
+
+      pages: [
+        {
+          path: "/docs",
+        },
+        {
+          path: "/api/search",
+        },
+      ],
+    }),
+    react(),
   ],
 });

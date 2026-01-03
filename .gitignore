@@ -1,7 +1,19 @@
-.DS_Store
-/node_modules/
+node_modules
 
-# React Router
-/.react-router/
+.DS_Store
+.cache
+.vercel
+.output
+.nitro
 /build/
+/dist/
+/api/
+/server/build
+/public/build
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+.tanstack
+
 .source

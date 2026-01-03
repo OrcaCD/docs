@@ -5,5 +5,6 @@ export function baseOptions(): BaseLayoutProps {
     nav: {
       title: "Tanstack Start",
     },
+    githubUrl: "https://github.com",
   };
 }

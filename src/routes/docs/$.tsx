@@ -8,6 +8,7 @@ import {
   DocsDescription,
   DocsPage,
   DocsTitle,
+  PageLastUpdate,
 } from "fumadocs-ui/layouts/docs/page";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import { baseOptions } from "@/lib/layout.shared";
@@ -40,7 +41,7 @@ const loader = createServerFn({
   });
 
 const clientLoader = browserCollections.docs.createClientLoader({
-  component({ toc, frontmatter, default: MDX }) {
+  component({ toc, frontmatter, default: MDX, lastModified }) {
     return (
       <DocsPage toc={toc}>
         <DocsTitle>{frontmatter.title}</DocsTitle>
@@ -52,6 +53,7 @@ const clientLoader = browserCollections.docs.createClientLoader({
             }}
           />
         </DocsBody>
+        {lastModified && <PageLastUpdate date={lastModified} />}
       </DocsPage>
     );
   },

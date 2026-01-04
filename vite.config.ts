@@ -7,6 +7,7 @@ import tsConfigPaths from "vite-tsconfig-paths";
 import * as MdxConfig from "./source.config";
 
 export default defineConfig({
+  base: "/docs",
   server: {
     port: 3000,
   },

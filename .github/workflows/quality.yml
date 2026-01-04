@@ -1,0 +1,32 @@
+name: 🔍 Code quality
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository ⬇️
+        uses: actions/checkout@v6
+
+      - name: Use Node.js 24.x ⚙️
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+          cache: "npm"
+
+      - name: Setup Aikido Safe Chain
+        run: |
+          npm i -g @aikidosec/safe-chain
+          safe-chain setup-ci
+
+      - name: Install dependencies 📦
+        run: npm ci
+
+      - name: Check code quality 🔍
+        run: node --run check

@@ -4,10 +4,10 @@ import {
   Outlet,
   Scripts,
 } from "@tanstack/react-router";
-import * as React from "react";
-import appCss from "@/styles/app.css?url";
 import { RootProvider } from "fumadocs-ui/provider/tanstack";
+import type { ReactNode } from "react";
 import SearchDialog from "@/components/search";
+import appCss from "@/styles/app.css?url";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -36,9 +36,9 @@ function RootComponent() {
   );
 }
 
-function RootDocument({ children }: { children: React.ReactNode }) {
+function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>

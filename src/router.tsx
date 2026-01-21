@@ -8,5 +8,6 @@ export function getRouter() {
     defaultPreload: "intent",
     scrollRestoration: true,
     defaultNotFoundComponent: NotFound,
+    trailingSlash: "always",
   });
 }

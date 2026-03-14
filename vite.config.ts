@@ -7,35 +7,35 @@ import tsConfigPaths from "vite-tsconfig-paths";
 import * as MdxConfig from "./source.config";
 
 export default defineConfig({
-  base: "/docs",
-  server: {
-    port: 3000,
-  },
-  plugins: [
-    mdx(MdxConfig),
-    tailwindcss(),
-    tsConfigPaths({
-      projects: ["./tsconfig.json"],
-    }),
-    tanstackStart({
-      spa: {
-        enabled: true,
-        prerender: {
-          enabled: true,
-          outputPath: "index.html",
-          crawlLinks: true,
-        },
-      },
+	base: "/docs",
+	server: {
+		port: 3000,
+	},
+	plugins: [
+		mdx(MdxConfig),
+		tailwindcss(),
+		tsConfigPaths({
+			projects: ["./tsconfig.json"],
+		}),
+		tanstackStart({
+			spa: {
+				enabled: true,
+				prerender: {
+					enabled: true,
+					outputPath: "index.html",
+					crawlLinks: true,
+				},
+			},
 
-      pages: [
-        {
-          path: "/docs",
-        },
-        {
-          path: "/api/search",
-        },
-      ],
-    }),
-    react(),
-  ],
+			pages: [
+				{
+					path: "/docs",
+				},
+				{
+					path: "/api/search",
+				},
+			],
+		}),
+		react(),
+	],
 });

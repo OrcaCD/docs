@@ -5,70 +5,70 @@ import { staticFunctionMiddleware } from "@tanstack/start-static-server-function
 import { useFumadocsLoader } from "fumadocs-core/source/client";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import {
-  DocsBody,
-  DocsDescription,
-  DocsPage,
-  DocsTitle,
-  PageLastUpdate,
+	DocsBody,
+	DocsDescription,
+	DocsPage,
+	DocsTitle,
+	PageLastUpdate,
 } from "fumadocs-ui/layouts/docs/page";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import { baseOptions } from "@/lib/layout.shared";
 import { source } from "@/lib/source";
 
 export const Route = createFileRoute("/docs/$")({
-  component: Page,
-  loader: async ({ params }) => {
-    const slugs = params._splat?.split("/") ?? [];
-    const data = await loader({ data: slugs });
-    await clientLoader.preload(data.path);
-    return data;
-  },
+	component: Page,
+	loader: async ({ params }) => {
+		const slugs = params._splat?.split("/") ?? [];
+		const data = await loader({ data: slugs });
+		await clientLoader.preload(data.path);
+		return data;
+	},
 });
 
 const loader = createServerFn({
-  method: "GET",
+	method: "GET",
 })
-  .inputValidator((slugs: string[]) => slugs)
-  .middleware([staticFunctionMiddleware])
-  .handler(async ({ data: slugs }) => {
-    const page = source.getPage(slugs);
-    if (!page) {
-      throw notFound();
-    }
+	.inputValidator((slugs: string[]) => slugs)
+	.middleware([staticFunctionMiddleware])
+	.handler(async ({ data: slugs }) => {
+		const page = source.getPage(slugs);
+		if (!page) {
+			throw notFound();
+		}
 
-    return {
-      path: page.path,
-      pageTree: await source.serializePageTree(source.getPageTree()),
-    };
-  });
+		return {
+			path: page.path,
+			pageTree: await source.serializePageTree(source.getPageTree()),
+		};
+	});
 
 const clientLoader = browserCollections.docs.createClientLoader({
-  component({ toc, frontmatter, default: MDX, lastModified }) {
-    return (
-      <DocsPage toc={toc}>
-        <DocsTitle>{frontmatter.title}</DocsTitle>
-        <DocsDescription>{frontmatter.description}</DocsDescription>
-        <DocsBody>
-          <MDX
-            components={{
-              ...defaultMdxComponents,
-            }}
-          />
-        </DocsBody>
-        {lastModified && <PageLastUpdate date={lastModified} />}
-      </DocsPage>
-    );
-  },
+	component({ toc, frontmatter, default: MDX, lastModified }) {
+		return (
+			<DocsPage toc={toc}>
+				<DocsTitle>{frontmatter.title}</DocsTitle>
+				<DocsDescription>{frontmatter.description}</DocsDescription>
+				<DocsBody>
+					<MDX
+						components={{
+							...defaultMdxComponents,
+						}}
+					/>
+				</DocsBody>
+				{lastModified && <PageLastUpdate date={lastModified} />}
+			</DocsPage>
+		);
+	},
 });
 
 function Page() {
-  const data = Route.useLoaderData();
-  const Content = clientLoader.getComponent(data.path);
-  const { pageTree } = useFumadocsLoader(data);
+	const data = Route.useLoaderData();
+	const Content = clientLoader.getComponent(data.path);
+	const { pageTree } = useFumadocsLoader(data);
 
-  return (
-    <DocsLayout {...baseOptions()} tree={pageTree}>
-      <Content />
-    </DocsLayout>
-  );
+	return (
+		<DocsLayout {...baseOptions()} tree={pageTree}>
+			<Content />
+		</DocsLayout>
+	);
 }

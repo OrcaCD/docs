@@ -29,4 +29,7 @@ jobs:
         run: npm ci
 
       - name: Check code quality 🔍
-        run: node --run check
+        run: node --run lint
+
+      - name: Check code formatting 🎨
+        run: node --run format:check

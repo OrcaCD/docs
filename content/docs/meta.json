@@ -1,0 +1,15 @@
+{
+	"title": "Getting Started",
+	"description": "The docs framework",
+	"root": true,
+	"pages": [
+		"---Getting Started---",
+		"index",
+		"setup",
+		"configuration",
+		"guides",
+		"advanced",
+		"troubleshooting",
+		"helping-out"
+	]
+}

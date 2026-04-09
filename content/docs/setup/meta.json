@@ -1,0 +1,7 @@
+{
+	"title": "Setup",
+	"pages": ["installation", "upgrading"],
+	"icon": "Rocket",
+	"defaultOpen": true,
+	"collapsible": false
+}

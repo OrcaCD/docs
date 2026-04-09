@@ -1,0 +1,35 @@
+---
+title: Environment Variables
+description: Complete reference for all OrcaCD configuration options
+---
+
+Below are all the environment variables supported by OrcaCD. These should be configured in your `.env` file.
+
+Be cautious when modifying environment variables that are not recommended to change.
+
+## General
+
+These environment variables can be used in both the agent and the hub.
+
+| Variable    | Default Value | Recommended to change | Description |
+| ----------- | ------------- | --------------------- | ----------- |
+| `DEBUG`     | `false`       | no                    | Debug mode  |
+| `LOG_LEVEL` | `info `       | no                    | Log level   |
+
+## Hub
+
+| Variable           | Default Value | Recommended to change | Description                                                      |
+| ------------------ | ------------- | --------------------- | ---------------------------------------------------------------- |
+| `APP_URL`          | `false`       | yes                   | The URL of the OrcaCD instance                                   |
+| `APP_SECRET`       | `info `       | yes                   | Secret used for authentication and encryption                    |
+| `HOST`             | `0.0.0.0 `    | no                    | Host address                                                     |
+| `PORT`             | `8080 `       | no                    | Container port                                                   |
+| `DisableLocalAuth` | `false `      | no                    | Disable password authentication. Useful when using SSO with OIDC |
+| `TrustedProxies`   | `- `          | no                    | Recommended if using a reverse proxy                             |
+
+## Agent
+
+| Variable     | Default Value | Recommended to change | Description                           |
+| ------------ | ------------- | --------------------- | ------------------------------------- |
+| `HUB_URL`    | `-`           | yes                   | The URL of the Hub                    |
+| `AUTH_TOKEN` | `- `          | yes                   | The authentication token of the agent |

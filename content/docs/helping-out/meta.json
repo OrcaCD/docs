@@ -1,0 +1,7 @@
+{
+	"title": "Helping Out",
+	"pages": ["contributing", "documentation", "translating"],
+	"icon": "HandHelping",
+	"defaultOpen": true,
+	"collapsible": false
+}

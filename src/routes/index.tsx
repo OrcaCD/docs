@@ -11,7 +11,16 @@ import {
 	BookOpen,
 	Users,
 	Heart,
+	Book,
+	ComponentIcon,
+	Settings,
 } from "lucide-react";
+import {
+	NavbarMenu,
+	NavbarMenuContent,
+	NavbarMenuLink,
+	NavbarMenuTrigger,
+} from "fumadocs-ui/layouts/home/navbar";
 
 export const Route = createFileRoute("/")({
 	component: Home,
@@ -65,8 +74,56 @@ function Home() {
 			{...baseOptions()}
 			links={[
 				{
-					text: "Docs",
-					url: "/docs",
+					type: "menu",
+					on: "menu",
+					text: "Documentation",
+					items: [
+						{
+							text: "Introduction",
+							url: "/docs",
+							icon: <Book />,
+						},
+						{
+							text: "Installation",
+							url: "/docs/setup/installation",
+							icon: <Rocket />,
+						},
+						{
+							text: "Environment Variables",
+							url: "/docs/configuration/env-variables",
+							icon: <Settings />,
+						},
+					],
+				},
+				{
+					type: "custom",
+					on: "nav",
+					children: (
+						<NavbarMenu>
+							<NavbarMenuTrigger>Docs</NavbarMenuTrigger>
+							<NavbarMenuContent>
+								<NavbarMenuLink href="/docs">
+									<Book className="bg-fd-primary text-fd-primary-foreground p-1 mb-2 rounded-md" />
+									<p className="font-medium">Introduction</p>
+									<p className="text-fd-muted-foreground text-sm">Welcome to OrcaCD</p>
+								</NavbarMenuLink>
+								<NavbarMenuLink href="/docs/setup/installation">
+									<Rocket className="bg-fd-primary text-fd-primary-foreground p-1 mb-2 rounded-md" />
+									<p className="font-medium">Installation</p>
+									<p className="text-fd-muted-foreground text-sm">
+										Get OrcaCD running quickly with Docker installation.
+									</p>
+								</NavbarMenuLink>
+								<NavbarMenuLink href="/docs/configuration/env-variables">
+									<Settings className="bg-fd-primary text-fd-primary-foreground p-1 mb-2 rounded-md" />
+									<p className="font-medium">Environment Variables</p>
+									<p className="text-fd-muted-foreground text-sm">
+										Complete reference for all OrcaCD configuration options.
+									</p>
+								</NavbarMenuLink>
+							</NavbarMenuContent>
+						</NavbarMenu>
+					),
 				},
 			]}
 		>

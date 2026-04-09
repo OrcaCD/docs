@@ -1,7 +1,0 @@
-{
-	"title": "Guides",
-	"pages": ["oidc"],
-	"icon": "Book",
-	"defaultOpen": true,
-	"collapsible": false
-}

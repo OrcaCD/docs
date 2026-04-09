@@ -1,7 +1,0 @@
-{
-	"title": "Configuration",
-	"pages": ["env-variables"],
-	"icon": "Settings",
-	"defaultOpen": true,
-	"collapsible": false
-}

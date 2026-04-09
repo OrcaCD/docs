@@ -5,11 +5,17 @@
 	"pages": [
 		"---Getting Started---",
 		"index",
-		"setup",
-		"configuration",
-		"guides",
-		"advanced",
-		"troubleshooting",
-		"helping-out"
+		"---[Rocket]Setup---",
+		"...setup",
+		"---[Settings]Configuration---",
+		"...configuration",
+		"---[Book]Guides---",
+		"...guides",
+		"---[Pickaxe]Advanced---",
+		"...advanced",
+		"---[Bug]Troubleshooting---",
+		"...troubleshooting",
+		"---[HandHelping]Helping Out---",
+		"...helping-out"
 	]
 }

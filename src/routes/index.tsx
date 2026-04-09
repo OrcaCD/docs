@@ -12,7 +12,6 @@ import {
 	Users,
 	Heart,
 	Book,
-	ComponentIcon,
 	Settings,
 } from "lucide-react";
 import {

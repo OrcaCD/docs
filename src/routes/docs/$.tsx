@@ -10,10 +10,13 @@ import {
 	DocsPage,
 	DocsTitle,
 	PageLastUpdate,
+	MarkdownCopyButton,
+	ViewOptionsPopover,
 } from "fumadocs-ui/layouts/docs/page";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import { baseOptions } from "@/lib/layout.shared";
-import { source } from "@/lib/source";
+import { getPageMarkdownUrl, source } from "@/lib/source";
+import { Suspense } from "react";
 
 export const Route = createFileRoute("/docs/$")({
 	component: Page,
@@ -38,16 +41,33 @@ const loader = createServerFn({
 
 		return {
 			path: page.path,
+			markdownUrl: getPageMarkdownUrl(page).url,
 			pageTree: await source.serializePageTree(source.getPageTree()),
 		};
 	});
 
 const clientLoader = browserCollections.docs.createClientLoader({
-	component({ toc, frontmatter, default: MDX, lastModified }) {
+	component(
+		{ toc, frontmatter, default: MDX, lastModified }, // you can define props for the component
+		{
+			markdownUrl,
+			path,
+		}: {
+			markdownUrl: string;
+			path: string;
+		},
+	) {
 		return (
 			<DocsPage toc={toc}>
 				<DocsTitle>{frontmatter.title}</DocsTitle>
 				<DocsDescription>{frontmatter.description}</DocsDescription>
+				<div className="flex flex-row gap-2 items-center border-b -mt-4 pb-6">
+					<MarkdownCopyButton markdownUrl={markdownUrl} />
+					<ViewOptionsPopover
+						markdownUrl={markdownUrl}
+						githubUrl={`https://github.com/OrcaCD/docs/blob/main/content/docs/${path}`}
+					/>
+				</div>
 				<DocsBody>
 					<MDX
 						components={{
@@ -62,13 +82,11 @@ const clientLoader = browserCollections.docs.createClientLoader({
 });
 
 function Page() {
-	const data = Route.useLoaderData();
-	const Content = clientLoader.getComponent(data.path);
-	const { pageTree } = useFumadocsLoader(data);
+	const { path, pageTree, markdownUrl } = useFumadocsLoader(Route.useLoaderData());
 
 	return (
 		<DocsLayout {...baseOptions()} tree={pageTree}>
-			<Content />
+			<Suspense>{clientLoader.useContent(path, { markdownUrl, path })}</Suspense>
 		</DocsLayout>
 	);
 }

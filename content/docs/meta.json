@@ -1,0 +1,21 @@
+{
+	"title": "Getting Started",
+	"description": "The docs framework",
+	"root": true,
+	"pages": [
+		"---Getting Started---",
+		"index",
+		"---[Rocket]Setup---",
+		"...setup",
+		"---[Settings]Configuration---",
+		"...configuration",
+		"---[Book]Guides---",
+		"...guides",
+		"---[Pickaxe]Advanced---",
+		"...advanced",
+		"---[Bug]Troubleshooting---",
+		"...troubleshooting",
+		"---[HandHelping]Helping Out---",
+		"...helping-out"
+	]
+}

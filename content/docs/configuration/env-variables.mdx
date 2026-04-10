@@ -1,0 +1,35 @@
+---
+title: Environment Variables
+description: Complete reference for all OrcaCD configuration options
+---
+
+Below are all the environment variables supported by OrcaCD. These should be configured in your `.env` file.
+
+Be cautious when modifying environment variables that are not recommended to change.
+
+## General
+
+These environment variables can be used in both the agent and the hub.
+
+| Variable    | Default Value | Recommended to change | Description                                                |
+| ----------- | ------------- | --------------------- | ---------------------------------------------------------- |
+| `DEBUG`     | `false`       | no                    | Debug mode                                                 |
+| `LOG_LEVEL` | `info `       | no                    | Log level. Options: trace, debug, info, warn, error, fatal |
+
+## Hub
+
+| Variable           | Default Value | Recommended to change | Description                                                                                |
+| ------------------ | ------------- | --------------------- | ------------------------------------------------------------------------------------------ |
+| `APP_URL`          | `-`           | yes (required)        | The URL of the OrcaCD instance                                                             |
+| `APP_SECRET`       | `-`           | yes (required)        | Secret used for authentication and encryption. Generate one with `openssl rand -base64 42` |
+| `HOST`             | `0.0.0.0 `    | no                    | Host address                                                                               |
+| `PORT`             | `8080 `       | no                    | Container port                                                                             |
+| `DisableLocalAuth` | `false `      | no                    | Disable password authentication. Useful when using SSO with OIDC                           |
+| `TrustedProxies`   | `- `          | no                    | Recommended if using a reverse proxy. Comma seperated list of network origins              |
+
+## Agent
+
+| Variable     | Default Value | Recommended to change | Description                                                                                 |
+| ------------ | ------------- | --------------------- | ------------------------------------------------------------------------------------------- |
+| `HUB_URL`    | `-`           | yes (required)        | The URL of the Hub. Example: `https://example.com`                                          |
+| `AUTH_TOKEN` | `- `          | yes (required)        | The authentication token of the agent. Register an agent in the hub frontend to retrieve it |

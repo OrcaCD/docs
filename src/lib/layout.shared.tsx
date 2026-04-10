@@ -11,6 +11,5 @@ export function baseOptions(): BaseLayoutProps {
 			),
 			transparentMode: "top",
 		},
-		githubUrl: "https://github.com/OrcaCD/orca-cd",
 	};
 }

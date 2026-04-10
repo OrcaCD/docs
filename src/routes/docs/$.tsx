@@ -85,7 +85,7 @@ function Page() {
 	const { path, pageTree, markdownUrl } = useFumadocsLoader(Route.useLoaderData());
 
 	return (
-		<DocsLayout {...baseOptions()} tree={pageTree}>
+		<DocsLayout {...baseOptions()} tree={pageTree} githubUrl="https://github.com/OrcaCD/orca-cd">
 			<Suspense>{clientLoader.useContent(path, { markdownUrl, path })}</Suspense>
 		</DocsLayout>
 	);

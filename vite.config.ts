@@ -2,27 +2,17 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
 import mdx from "fumadocs-mdx/vite";
-import { readdirSync } from "node:fs";
-import { relative, resolve, sep } from "node:path";
+import { globSync } from "node:fs";
+import { sep } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
-function collectLlmDocPages(dir: string, baseDir = dir): string[] {
+function collectLlmDocPages(baseDir: string): string[] {
 	const pages: string[] = [];
 
-	for (const entry of readdirSync(dir, { withFileTypes: true })) {
-		const absolutePath = resolve(dir, entry.name);
-
-		if (entry.isDirectory()) {
-			pages.push(...collectLlmDocPages(absolutePath, baseDir));
-			continue;
-		}
-
-		if (!entry.isFile() || !entry.name.endsWith(".mdx")) {
-			continue;
-		}
-
-		const relativePath = relative(baseDir, absolutePath).split(sep).join("/");
-		let docPath = relativePath.slice(0, -".mdx".length);
+	for (const mdxPath of globSync("**/*.mdx", { cwd: baseDir })) {
+		const normalizedPath = mdxPath.split(sep).join("/");
+		let docPath = normalizedPath.slice(0, -".mdx".length);
 
 		if (docPath === "index") {
 			docPath = "";
@@ -37,9 +27,9 @@ function collectLlmDocPages(dir: string, baseDir = dir): string[] {
 	return pages;
 }
 
-const llmDocPages = [...new Set(collectLlmDocPages(resolve(process.cwd(), "content/docs")))].sort(
-	(a, b) => a.localeCompare(b),
-);
+const llmDocPages = [
+	...new Set(collectLlmDocPages(fileURLToPath(new URL("./content/docs", import.meta.url)))),
+].sort((a, b) => a.localeCompare(b));
 
 export default defineConfig({
 	server: {

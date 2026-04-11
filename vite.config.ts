@@ -3,20 +3,14 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
 import mdx from "fumadocs-mdx/vite";
 import { defineConfig } from "vite";
-import tsConfigPaths from "vite-tsconfig-paths";
-import * as MdxConfig from "./source.config";
 
 export default defineConfig({
-	base: "/docs",
 	server: {
 		port: 3000,
 	},
 	plugins: [
-		mdx(MdxConfig),
+		mdx(await import("./source.config")),
 		tailwindcss(),
-		tsConfigPaths({
-			projects: ["./tsconfig.json"],
-		}),
 		tanstackStart({
 			spa: {
 				enabled: true,
@@ -34,8 +28,20 @@ export default defineConfig({
 				{
 					path: "/api/search",
 				},
+				{
+					path: "llms-full.txt",
+				},
+				{
+					path: "llms.txt",
+				},
 			],
 		}),
 		react(),
 	],
+	resolve: {
+		tsconfigPaths: true,
+		alias: {
+			tslib: "tslib/tslib.es6.js",
+		},
+	},
 });

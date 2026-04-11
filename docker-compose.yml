@@ -1,0 +1,7 @@
+services:
+  docs:
+    image: orcacd/docs:latest
+    container_name: orca-docs
+    ports:
+      - "127.0.0.1:8080:80"
+    restart: unless-stopped

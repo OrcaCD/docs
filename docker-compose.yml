@@ -1,6 +1,6 @@
 services:
   docs:
-    image: orcacd/docs:latest
+    image: ghcr.io/orcacd/docs:latest
     container_name: orca-docs
     ports:
       - "127.0.0.1:8080:8080"

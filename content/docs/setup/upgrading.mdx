@@ -11,6 +11,7 @@ description: Keep your OrcaCD installation up to date
     To create a backup of your database, you can copy the `hub.db` file from your docker volumes to a safe location. For example:
 
     ```bash
+    docker compose down
     docker cp orca-hub:/data/hub.db ./hub_backup.db
     ```
 

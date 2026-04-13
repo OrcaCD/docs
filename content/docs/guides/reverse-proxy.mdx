@@ -9,4 +9,26 @@ TODO
 
 ## Traefik
 
-TODO
+To use Traefik as a reverse proxy for OrcaCD, you can add the following labels to your Docker Compose configuration for the OrcaCD Hub service:
+
+```yml
+services:
+  hub:
+    image: ghcr.io/orcacd/hub:latest
+    container_name: orca-hub
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
+    env_file: .env
+    labels: // [!code ++]
+      - "traefik.enable=true" // [!code ++]
+      - "traefik.http.routers.orcacd.rule=Host(`orcacd.example.com`)" // [!code ++]
+    volumes:
+      - ./data/hub:/app/data
+```
+
+Now when registering an agent, you can use following URL as the Hub URL:
+
+```
+HUB_URL=http://orcacd.example.com
+```

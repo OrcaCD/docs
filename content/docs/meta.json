@@ -5,6 +5,7 @@
 	"pages": [
 		"---Getting Started---",
 		"index",
+		"demo",
 		"---[Rocket]Setup---",
 		"...setup",
 		"---[Settings]Configuration---",

@@ -3,8 +3,45 @@ title: OIDC Authentication
 description: Learn how to use OIDC providers for auhentication in OrcaCD
 ---
 
-TODO:
+OrcaCD supports OIDC authentication, allowing users to log in using their existing accounts from various OIDC providers. This guide will walk you through the process of setting up OIDC authentication in OrcaCD.
+
+<Callout title="Disable password login" type="warn">
+	When using OIDC authentication, you can disable password login to enhance security. This ensures
+	that users can only log in using their OIDC provider accounts, reducing the risk of unauthorized
+	access through weak or compromised passwords. Before disabling password login, make sure the OIDC
+	authentication is properly configured and tested.
+
+    To disable password login, set the `DISABLE_LOCAL_AUTH` environment variable. Look at the [environment variables documentation](/docs/configuration/env-variables) for more details.
+
+</Callout>
 
 ## Example (Pocket Id)
 
-TODO
+To set up OIDC authentication with Pocket Id, follow these steps:
+
+### 1. Create a Pocket Id Application
+
+Go to your Pocket ID dashboard and create a new application. Give it a name and leave the redirect URI blank for now.
+
+TODO: Pocket Id application creation image here
+
+### 2. Configure OrcaCD
+
+1. Go to the OrcaCD Admin settings and navigate to the OIDC configuration section.
+2. Create a new OIDC provider configuration with the following details:
+   - **Name**: A name for your OIDC provider (e.g., "Pocket Id").
+   - **Issuer URL**: The issuer URL provided by Pocket Id (e.g., `https://pocketid.com`).
+   - **Client ID**: The client ID from your Pocket Id application.
+   - **Client Secret**: The client secret from your Pocket Id application.
+3. Save the configuration and ensure it is enabled.
+
+TODO: Orca CD OIDC configuration image here
+
+### 3. Test the Configuration
+
+1. Log out of OrcaCD if you are currently logged in.
+2. Click on the "Login with Pocket Id" button on the login page.
+3. You will be redirected to the Pocket Id login page. Enter your credentials and log in.
+4. After successful authentication, you will be redirected back to OrcaCD and logged in with your Pocket Id account.
+
+TODO: Login page image here

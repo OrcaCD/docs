@@ -3,4 +3,64 @@ title: Contributing
 description: Learn how to contribute to the OrcaCD project
 ---
 
-TODO
+Any contribution is greatly appreciated. You don't need to be a developer to contribute. You can help by translating the app, reporting issues, or simply sharing your ideas for new features.
+
+If you have any questions, please do not hesitate to contact us.
+
+Read our [Code of Conduct](https://github.com/OrcaCD/orca-cd/blob/main/CODE_OF_CONDUCT.md) to keep our community approachable and respectable.
+
+## Security
+
+If you would like to report a security vulnerability, please take a look at [SECURITY.md](https://github.com/OrcaCD/orca-cd/blob/main/SECURITY.md)
+
+## Code contributions
+
+We welcome code contributions and encourage clear, well-documented changes that include appropriate tests.
+When introducing a new feature, please ensure you add relevant tests.
+For breaking changes or major new features, open an issue beforehand to discuss your proposal with the team.
+
+### Required tools
+
+We use Go and Node.js for the development of the backend and frontend respectively. For a detailed list of required tools and their versions, please refer to the [CONTRIBUTING.md](https://github.com/OrcaCD/orca-cd/blob/main/CONTRIBUTING.md#required-tools) file in the repository.
+
+### Setting up the development environment
+
+1. Install all required tools listed above.
+2. Clone the repository and navigate to the project directory.
+3. For the frontend, navigate to the `frontend/` directory and run `npm ci` to install dependencies.
+4. Run the frontend development server with `node --run dev` from the `frontend/` directory.
+5. Run the backend services with `just run-hub` and `just run-agent` in the `backend/` directory.
+6. Access the app at `http://localhost:3000` and the hub API at `http://localhost:8080`.
+
+### Running locally with Docker
+
+A Docker Compose file is provided for running the full stack locally:
+
+```sh
+docker compose -f docker-compose.dev.yaml up --build
+```
+
+The hub service will be available at `http://localhost:8080`.
+
+### Submitting a Pull Request
+
+Before you submit the pull request for review please ensure that
+
+- The pull request naming follows the [Conventional Commits specification](https://www.conventionalcommits.org):
+
+  `<type>[optional scope]: <description>`
+
+  example:
+
+  ```yml
+  fix: hide global audit log switch for non admin users
+  ```
+
+  Where `TYPE` can be:
+  - feat - is a new feature
+  - doc - documentation only changes
+  - fix - a bug fix
+  - refactor - code change that neither fixes a bug nor adds a feature
+
+- Your pull request has a detailed description
+- You have added tests for any new features or bug fixes

@@ -7,6 +7,14 @@ description: Keep your OrcaCD installation up to date
 	Before upgrading OrcaCD in production, we strongly recommend creating a backup of your database
 	and keeping a copy of your current `.env` and `docker-compose.yml` files. This gives you a
 	rollback path if something goes wrong.
+
+    To create a backup of your database, you can copy the `hub.db` file from your docker volumes to a safe location. For example:
+
+    ```bash
+    docker compose down
+    docker cp orca-hub:/data/hub.db ./hub_backup.db
+    ```
+
 </Callout>
 
 For upgrading OrcaCD when using Docker, you just need to pull the latest image and restart the services:

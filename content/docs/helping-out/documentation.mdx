@@ -3,4 +3,36 @@ title: Documentation
 description: Contribute to improving the OrcaCD website or documentation
 ---
 
-TODO
+This guide explains how to add or edit documentation (Fumadocs).
+
+## 1. Where docs live
+
+All markdown pages are under `/content/docs`. The file `meta.json` controls the sidebar structure and order.
+
+## 2. Adding a new page
+
+1. Pick the correct folder that matches a collection pattern (e.g. `/guides`).
+
+2. Create `/content/docs/<section>/<slug>.md`.
+
+3. Add frontmatter:
+
+```yaml
+---
+title: Installation
+description: Get OrcaCD running quickly with Docker installation
+---
+```
+
+4. Run `npm run dev` and check your page at `http://localhost:3000/docs/<section>/<slug>`.
+
+<Callout title="Components">
+	To use components in the documentation please look at the [Fumadadocs Documentation for
+	Markdown](https://www.fumadocs.dev/docs/markdown)
+</Callout>
+
+## 3. Submitting changes
+
+After making changes you can create a pull request to the `main` branch. Please make sure to commit using Conventional Commits (`doc: update guides`).
+
+Thanks for helping out!

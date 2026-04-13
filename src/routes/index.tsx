@@ -11,6 +11,7 @@ import {
 	BookOpen,
 	Users,
 	Heart,
+	Play,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -84,6 +85,15 @@ function Home() {
 						>
 							<Rocket className="size-4" />
 							Get Started
+						</Link>
+
+						<Link
+							to="/docs/$"
+							params={{ _splat: "demo" }}
+							className="inline-flex items-center gap-2 rounded-lg bg-fd-secondary px-5 py-2.5 text-sm font-medium text-fd-secondary-foreground transition-opacity hover:opacity-90"
+						>
+							<Play className="size-4" />
+							Demo
 						</Link>
 					</div>
 				</div>
@@ -228,6 +238,7 @@ function Home() {
 							params={{ _splat: "setup/installation" }}
 							className="inline-flex items-center gap-2 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-medium text-fd-primary-foreground transition-opacity hover:opacity-90"
 						>
+							<BookOpen className="size-4" />
 							Read Documentation
 						</Link>
 						<a
@@ -236,6 +247,7 @@ function Home() {
 							rel="noopener noreferrer"
 							className="inline-flex items-center gap-2 rounded-lg border border-fd-border bg-fd-card px-5 py-2.5 text-sm font-medium text-fd-foreground transition-colors hover:bg-fd-accent"
 						>
+							<img src="/assets/icons/github.svg" alt="GitHub" className="size-4 dark:invert" />
 							View on GitHub
 						</a>
 					</div>

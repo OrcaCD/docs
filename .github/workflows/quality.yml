@@ -33,3 +33,9 @@ jobs:
 
       - name: Check code formatting 🎨
         run: node --run format:check
+
+      - name: Check types 🧩
+        run: node --run types:check
+
+      - name: Check build 🏗️
+        run: node --run build

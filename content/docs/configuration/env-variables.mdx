@@ -13,7 +13,6 @@ These environment variables can be used in both the agent and the hub.
 
 | Variable    | Default Value | Recommended to change | Description                                                |
 | ----------- | ------------- | --------------------- | ---------------------------------------------------------- |
-| `DEBUG`     | `false`       | no                    | Debug mode                                                 |
 | `LOG_LEVEL` | `info `       | no                    | Log level. Options: trace, debug, info, warn, error, fatal |
 | `LOG_JSON`  | `false`       | no                    | Enable JSON formatted logs.                                |
 
@@ -27,6 +26,7 @@ These environment variables can be used in both the agent and the hub.
 | `PORT`               | `8080 `       | no                    | Container port                                                                                          |
 | `DISABLE_LOCAL_AUTH` | `false `      | no                    | Disable password authentication. Useful when using SSO with OIDC                                        |
 | `TRUSTED_PROXIES`    | `- `          | no                    | Recommended if using a reverse proxy. Comma seperated list of network origins                           |
+| `DISABLE_UI`         | `false `      | no                    | Disable serving the frontend. Useful when using the hub only for API access.                            |
 | `DEMO`               | `false `      | no                    | This mode disables all functions except the login and additionally seeds some demo data in the database |
 
 ## Agent

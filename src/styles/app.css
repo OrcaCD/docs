@@ -9,3 +9,8 @@
 .dark {
 	--color-fd-primary: oklch(0.68 0.15 237);
 }
+
+button:not([disabled]),
+[role="button"]:not([disabled]) {
+	cursor: pointer;
+}

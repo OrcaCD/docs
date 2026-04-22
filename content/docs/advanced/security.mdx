@@ -1,6 +1,20 @@
 ---
 title: Security
-description: Secure your OrcaCD deployment with hardening
+description: Secure your OrcaCD deployment
 ---
 
-TODO:
+OrcaCD is designed to be safe by default, but of course, there are always additional steps you can take to further secure your deployment. Here are some best practices to consider:
+
+## Harden your Deployment
+
+- Disable password authentication for the Hub and use a secure OIDC provider instead, that enforces strong authentication methods, including secure multi-factor authentication (MFA).
+- Always run the hub behind a secure reverse proxy and ensure that all communicationis encrypted using TLS.
+- Make sure to configure the `TRUSTED_PROXIES` environment variable correctly to prevent IP spoofing attacks.
+
+## Why is it safe by default?
+
+A big focus of OrcaCD next to ease of use is security. Here are some of the measures we have taken to achieve this:
+
+- All sensitive data is stored encrypted in the database using a modern encryption algorithm ([AEGIS-256](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-aegis-aead-18)).
+- Messages between the Hub and the Agents are encrypted with the same algorithm. The key is computed using the quantum-resistant [ML-KEM](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.pdf) algorithm in combination with [X25519](https://www.rfc-editor.org/rfc/rfc7748.html).
+- We take all security issues seriously. You can find our security policy [here](https://github.com/OrcaCD/orca-cd/blob/main/SECURITY.md).

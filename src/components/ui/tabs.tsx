@@ -39,7 +39,9 @@ const TabsContext = createContext<{
 
 function useTabContext() {
 	const ctx = use(TabsContext);
-	if (!ctx) throw new Error("You must wrap your component in <Tabs>");
+	if (!ctx) {
+		throw new Error("You must wrap your component in <Tabs>");
+	}
 	return ctx;
 }
 
@@ -67,10 +69,16 @@ export function Tabs({
 				[_value, useEffectEvent((v: string) => _onValueChange?.(v))];
 
 	useLayoutEffect(() => {
-		if (!groupId) return;
+		if (!groupId) {
+			return;
+		}
 		let previous = sessionStorage.getItem(groupId);
-		if (persist) previous ??= localStorage.getItem(groupId);
-		if (previous) setValue(previous);
+		if (persist) {
+			previous ??= localStorage.getItem(groupId);
+		}
+		if (previous) {
+			setValue(previous);
+		}
 
 		const groupListeners = listeners.get(groupId) ?? new Set();
 		groupListeners.add(setValue);
@@ -82,7 +90,9 @@ export function Tabs({
 
 	useLayoutEffect(() => {
 		const hash = window.location.hash.slice(1);
-		if (!hash) return;
+		if (!hash) {
+			return;
+		}
 
 		for (const [value, id] of valueToIdMap.entries()) {
 			if (id === hash) {
@@ -109,11 +119,15 @@ export function Tabs({
 				if (groupId) {
 					const groupListeners = listeners.get(groupId);
 					if (groupListeners) {
-						for (const listener of groupListeners) listener(v);
+						for (const listener of groupListeners) {
+							listener(v);
+						}
 					}
 
 					sessionStorage.setItem(groupId, v);
-					if (persist) localStorage.setItem(groupId, v);
+					if (persist) {
+						localStorage.setItem(groupId, v);
+					}
 				} else {
 					setValue(v);
 				}

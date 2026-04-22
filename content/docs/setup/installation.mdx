@@ -3,13 +3,7 @@ title: Installation
 description: Get OrcaCD running quickly with Docker
 ---
 
-import { Step, Steps } from "fumadocs-ui/components/steps";
-import { Tab, Tabs } from "fumadocs-ui/components/tabs";
-
-<Steps>
-<Step>
-
-## Start Hub and Agent
+## Start Hub and Agent [step]
 
 Download the [`docker-compose.yml`](https://raw.githubusercontent.com/OrcaCD/orca-cd/main/docker-compose.yml) and [`.env`](https://raw.githubusercontent.com/OrcaCD/orca-cd/main/.env.example) file:
 
@@ -37,36 +31,22 @@ Start the Hub and the Agent:
 docker compose up -d
 ```
 
-</Step>
-<Step>
-
-## Configure your Reverse Proxy
+## Configure your Reverse Proxy [step]
 
 See the [reverse proxy guide](../guides/reverse-proxy) for instructions on how to configure a reverse proxy for your Hub.
 
-</Step>
-<Step>
-
-## Create an Admin Account
+## Create an Admin Account [step]
 
 Create an admin account on `https://<your-app-url>/login`
 
 Todo: Add image
 
-</Step>
-<Step>
-
-## Connect your first Agent
+## Connect your first Agent [step]
 
 Navigate to the Agents page and click "Add Agent". Follow the instructions and copy the token and add it as `AUTH_TOKEN` to the `.env` file of your Agent deployment and restart the Agent.
 
 Todo: Add image
 
-</Step>
-<Step>
-## Start Deploying
+## Start Deploying [step]
 
 Add your first repository and create your first deployment.
-
-</Step>
-</Steps>

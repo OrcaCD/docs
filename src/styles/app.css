@@ -8,6 +8,7 @@
 
 .dark {
 	--color-fd-primary: oklch(0.68 0.15 237);
+	--color-fd-background: hsl(0, 0%, 11%);
 }
 
 button:not([disabled]),

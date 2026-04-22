@@ -1,19 +1,52 @@
 ---
 title: Installation
-description: Get OrcaCD running quickly with Docker installation
+description: Get OrcaCD running quickly with Docker
 ---
 
-## Installation with Docker
+## Start Hub and Agent [step]
 
-1. Download the [`docker-compose.yml`](https://raw.githubusercontent.com/OrcaCD/orca-cd/main/docker-compose.yml) and [`.env`](https://raw.githubusercontent.com/OrcaCD/orca-cd/main/.env.example) file:
+Download the [`docker-compose.yml`](https://raw.githubusercontent.com/OrcaCD/orca-cd/main/docker-compose.yml) and [`.env`](https://raw.githubusercontent.com/OrcaCD/orca-cd/main/.env.example) file:
 
-```bash
+```bash tab="curl"
 curl -o docker-compose.yml https://raw.githubusercontent.com/OrcaCD/orca-cd/main/docker-compose.yml
 curl -o .env https://raw.githubusercontent.com/OrcaCD/orca-cd/main/.env.example
 ```
 
-2. Edit the `.env` file so that it fits your needs. See the environment variables section for more information.
+```bash tab="wget"
+wget -O docker-compose.yml https://raw.githubusercontent.com/OrcaCD/orca-cd/main/docker-compose.yml
+wget -O .env https://raw.githubusercontent.com/OrcaCD/orca-cd/main/.env.example
+```
 
-3. Run `docker compose up -d`
+Edit the `.env` file according to the instructions in the file. You can also customize other environment variables as needed.
+See the [environment variables page](../configuration/env-variables) for more details.
+
+<Callout>
+	Remove the Agent part from the compose file if you don't want to deploy it to the same machine as
+	the Hub.
+</Callout>
+
+Start the Hub and the Agent:
+
+```bash
+docker compose up -d
+```
+
+## Configure your Reverse Proxy [step]
+
+See the [reverse proxy guide](../guides/reverse-proxy) for instructions on how to configure a reverse proxy for your Hub.
+
+## Create an Admin Account [step]
 
 Create an admin account on `https://<your-app-url>/login`
+
+Todo: Add image
+
+## Connect your first Agent [step]
+
+Navigate to the Agents page and click "Add Agent". Follow the instructions and copy the token and add it as `AUTH_TOKEN` to the `.env` file of your Agent deployment and restart the Agent.
+
+Todo: Add image
+
+## Start Deploying [step]
+
+Add your first repository and create your first deployment.

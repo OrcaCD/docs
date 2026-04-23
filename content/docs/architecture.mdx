@@ -1,0 +1,43 @@
+---
+title: Architecture
+description: An overview of the architecture of OrcaCD.
+---
+
+## Agent-Hub Architecture
+
+OrcaCD follows a Hub-Agent architecture, where the Hub is the central control plane that manages the state of the system and the Agents are responsible for executing deployments and reporting back to the Hub.
+This architecture allows for a scalable and flexible deployment system that can be easily extended with new features and integrations.
+
+### Hub
+
+The Hub is the central component of OrcaCD that manages the state of the system, processes deployment instructions, and provides an API for the Agents and other clients to interact with the system.
+Additionally, the Hub serves the web UI and provides a REST API for external integrations. It is responsible for processing deployment instructions, managing the state of the system, and providing an interface for the Agents to communicate with.
+
+### Agent
+
+The Agent is responsible for executing deployments and reporting back to the Hub.
+It runs on the target environment where the applications are deployed and communicates with the Hub to receive deployment instructions and send status updates.
+
+## GitOps Model
+
+GitOps is a set of practices that uses Git as the single source of truth for declarative infrastructure and applications.
+OrcaCD follows the GitOps model, where the desired state of the system is defined in Git and the Hub continuously reconciles the actual state with the desired state.
+
+### Git Syncing
+
+OrcaCD supports multiple Git syncing strategies, including polling and webhooks, to keep the Hub in sync with the desired state defined in Git.
+This allows for a seamless integration with existing Git workflows and tools.
+
+## Server-Sent-Events (SSE)
+
+In order to provide real-time updates to the UI and other clients, OrcaCD uses Server-Sent-Events (SSE) to stream events from the Hub to the clients.
+This allows for a responsive and interactive user experience, as clients can receive updates about the state of deployments, agents, and other system components in real-time without the need for polling.
+
+## Persistence
+
+For persistence, OrcaCD uses a sqlite database to store the state of the system.
+The database is being accessed through the Hub, which provides an API for the Agents and other clients to interact with the database.
+
+### Encryption
+
+To ensure the security of sensitive data, OrcaCD supports encryption of string data in the database.

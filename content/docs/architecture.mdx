@@ -18,6 +18,12 @@ Additionally, the Hub serves the web UI and provides a REST API for external int
 The Agent is responsible for executing deployments and reporting back to the Hub.
 It runs on the target environment where the applications are deployed and communicates with the Hub to receive deployment instructions and send status updates.
 
+### Communication
+
+The communication between the Hub and the Agents is using protocol buffers (protobuf) for efficient serialization and websockets for bidirectional communication.
+This allows for a responsive and efficient communication channel between the Hub and the Agents, enabling real-time updates and interactions.
+To make the communication secure, OrcaCD encrypts the data using post-quantum AEGIS-256.This also prevents messages from being read behind a proxy which does TLS termination or uses old / weak TLS configuration.
+
 ## GitOps Model
 
 GitOps is a set of practices that uses Git as the single source of truth for declarative infrastructure and applications.
@@ -30,7 +36,7 @@ This allows for a seamless integration with existing Git workflows and tools.
 
 ## Server-Sent-Events (SSE)
 
-In order to provide real-time updates to the UI and other clients, OrcaCD uses Server-Sent-Events (SSE) to stream events from the Hub to the clients.
+In order to provide real-time updates to the UI and other clients, OrcaCD uses Server-Sent-Events (SSE) to stream events from the Hub to the web ui.
 This allows for a responsive and interactive user experience, as clients can receive updates about the state of deployments, agents, and other system components in real-time without the need for polling.
 
 ## Persistence
@@ -40,4 +46,4 @@ The database is being accessed through the Hub, which provides an API for the Ag
 
 ### Encryption
 
-To ensure the security of sensitive data, OrcaCD supports encryption of string data in the database.
+To ensure the security of sensitive data, all string data in the database is encrypted.

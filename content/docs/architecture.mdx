@@ -22,7 +22,7 @@ It runs on the target environment where the applications are deployed and commun
 
 The communication between the Hub and the Agents is using protocol buffers (protobuf) for efficient serialization and websockets for bidirectional communication.
 This allows for a responsive and efficient communication channel between the Hub and the Agents, enabling real-time updates and interactions.
-To make the communication secure, OrcaCD encrypts the data using post-quantum AEGIS-256.This also prevents messages from being read behind a proxy which does TLS termination or uses old / weak TLS configuration.
+To make the communication secure, OrcaCD uses AEGIS-256 encryption and a post-quantum key exchange to encrypt the data. This also prevents messages from being read behind a proxy which does TLS termination or uses old / weak TLS configuration.
 
 ## GitOps Model
 

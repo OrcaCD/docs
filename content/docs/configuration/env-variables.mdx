@@ -17,16 +17,17 @@ These environment variables can be used in both the agent and the hub.
 
 ## Hub
 
-| Variable             | Default Value | Recommended to change | Description                                                                                             |
-| -------------------- | ------------- | --------------------- | ------------------------------------------------------------------------------------------------------- |
-| `APP_URL`            | `-`           | yes (required)        | The URL of the OrcaCD instance                                                                          |
-| `APP_SECRET`         | `-`           | yes (required)        | Secret used for authentication and encryption. Generate one with `openssl rand -base64 42`              |
-| `HOST`               | `0.0.0.0 `    | no                    | Host address                                                                                            |
-| `PORT`               | `8080 `       | no                    | Container port                                                                                          |
-| `DISABLE_LOCAL_AUTH` | `false `      | no                    | Disable password authentication. Useful when using SSO with OIDC                                        |
-| `TRUSTED_PROXIES`    | `- `          | no                    | Recommended if using a reverse proxy. Comma seperated list of network origins                           |
-| `DISABLE_UI`         | `false `      | no                    | Disable serving the frontend. Useful when using the hub only for API access.                            |
-| `DEMO`               | `false `      | no                    | This mode disables all functions except the login and additionally seeds some demo data in the database |
+| Variable               | Default Value | Recommended to change | Description                                                                                                  |
+| ---------------------- | ------------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `APP_URL`              | `-`           | yes (required)        | The URL of the OrcaCD instance                                                                               |
+| `APP_SECRET`           | `-`           | yes (required)        | Secret used for authentication and encryption. Generate one with `openssl rand -base64 42`                   |
+| `HOST`                 | `0.0.0.0`     | no                    | Host address                                                                                                 |
+| `PORT`                 | `8080`        | no                    | Container port                                                                                               |
+| `DISABLE_LOCAL_AUTH`   | `false`       | no                    | Disable password authentication. Useful when using SSO with OIDC                                             |
+| `TRUSTED_PROXIES`      | `-`           | no                    | Recommended if using a reverse proxy. Comma seperated list of network origins                                |
+| `DISABLE_UI`           | `false`       | no                    | Disable serving the frontend. Useful when using the hub only for API access.                                 |
+| `ALLOWED_INTERNAL_IPS` | `-`           | no                    | Private IPs that should be ignored by the SSRF protection. Comma seperated list of CIDR ranges or single IPs |
+| `DEMO`                 | `false`       | no                    | This mode disables all functions except the login and additionally seeds some demo data in the database      |
 
 ## Agent
 

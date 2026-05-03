@@ -8,18 +8,18 @@ description: Keep your OrcaCD installation up to date
 	and keeping a copy of your current `.env` and `docker-compose.yml` files. This gives you a
 	rollback path if something goes wrong.
 
-    To create a backup of your database, you can copy the `hub.db` file from your docker volumes to a safe location. For example:
+    To create a backup of your database, you can run the following command:
 
     ```bash
-    docker compose down
-    docker cp orca-hub:/data/hub.db ./hub_backup.db
+    docker compose exec hub /app/hub backup
     ```
+
+    After running this command make sure to copy the created backup file and include it in your backup strategy.
 
 </Callout>
 
 For upgrading OrcaCD when using Docker, you just need to pull the latest image and restart the services:
 
 ```bash
-docker compose pull
-docker compose up -d
+docker compose pull && docker compose up -d
 ```

@@ -17,6 +17,7 @@ import defaultMdxComponents from "fumadocs-ui/mdx";
 import { baseOptions } from "@/lib/layout.shared";
 import { getPageMarkdownUrl, source } from "@/lib/source";
 import { Suspense } from "react";
+import { AccountRecoveryTerminal } from "@/components/account-recovery-terminal";
 
 export const Route = createFileRoute("/docs/$")({
 	component: Page,
@@ -77,6 +78,7 @@ const clientLoader = browserCollections.docs.createClientLoader({
 					<MDX
 						components={{
 							...defaultMdxComponents,
+							AccountRecoveryTerminal,
 						}}
 					/>
 				</DocsBody>

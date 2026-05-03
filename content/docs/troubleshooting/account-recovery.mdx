@@ -8,10 +8,10 @@ There are two ways to reset a password for a user:
 1. UI: An admin can reset the password for a user in the admin panel under the "Users" tab by clicking on the three dots next to the user's name and selecting "Edit".
 2. Terminal: You can reset a password for a user by running `hub reset-password <user id or email>`. To execute this script with Docker you have to run the following command:
 
-<Callout>The user with the reset password has to change the password on the next login.</Callout>
-
 ```bash
 docker compose exec hub /app/hub reset-password <user id or email>
 ```
+
+<Callout>The user with the reset password has to change the password on the next login.</Callout>
 
 <AccountRecoveryTerminal />

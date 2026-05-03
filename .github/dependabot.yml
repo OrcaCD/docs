@@ -10,8 +10,8 @@ updates:
     labels:
       - "dependencies"
     open-pull-requests-limit: 5
-      cooldown:
-        default-days: 2
+    cooldown:
+      default-days: 2
     groups:
       dependencies:
         patterns:

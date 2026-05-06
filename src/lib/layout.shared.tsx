@@ -5,10 +5,9 @@ import {
 	NavbarMenuLink,
 	NavbarMenuTrigger,
 } from "fumadocs-ui/layouts/home/navbar";
-import { GithubInfo } from "fumadocs-ui/components/github-info";
-
 import type { BaseLayoutProps, LinkItemType } from "fumadocs-ui/layouts/shared";
 import { GitHubRelease } from "@/components/github-release";
+import { GithubInfo } from "@/components/github-info";
 
 export function baseOptions(): BaseLayoutProps {
 	return {
@@ -86,6 +85,6 @@ export const navbarLinks: LinkItemType[] = [
 	{
 		type: "custom",
 		secondary: true,
-		children: <GithubInfo owner="OrcaCD" repo="orca-cd" className="flex-row" />,
+		children: <GithubInfo />,
 	},
 ];

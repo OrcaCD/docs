@@ -1,3 +1,4 @@
+import { fetcher, getFallbackData } from "@/lib/fetcher";
 import { GitFork, Star } from "lucide-react";
 import useSWR from "swr";
 
@@ -7,11 +8,15 @@ const defaultFormatter = new Intl.NumberFormat("en", {
 });
 
 export function GithubInfo() {
-	const { data } = useSWR(
-		"https://api.github.com/repos/OrcaCD/orca-cd",
-		// oxlint-disable-next-line promise/prefer-await-to-then
-		(...args) => fetch(...args).then((res) => res.json()),
-	);
+	const { data } = useSWR<{
+		stargazers_count: number;
+		forks: number;
+	}>("https://api.github.com/repos/OrcaCD/orca-cd", fetcher, {
+		onSuccess: (data) => {
+			localStorage.setItem("github_info", JSON.stringify(data));
+		},
+		fallbackData: getFallbackData("github_info"),
+	});
 
 	return (
 		<a

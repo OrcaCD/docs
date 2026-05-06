@@ -1,11 +1,15 @@
+import { fetcher, getFallbackData } from "@/lib/fetcher";
 import useSWR from "swr";
 
 export function GitHubRelease() {
-	const { data } = useSWR(
-		"https://api.github.com/repos/OrcaCD/orca-cd/releases/latest",
-		// oxlint-disable-next-line promise/prefer-await-to-then
-		(...args) => fetch(...args).then((res) => res.json()),
-	);
+	const { data, isLoading } = useSWR<{
+		tag_name: string;
+	}>("https://api.github.com/repos/OrcaCD/orca-cd/releases/latest", fetcher, {
+		onSuccess: (data) => {
+			localStorage.setItem("github_release", JSON.stringify(data));
+		},
+		fallbackData: getFallbackData("github_release"),
+	});
 
 	return (
 		<a
@@ -14,7 +18,7 @@ export function GitHubRelease() {
 			rel="noopener noreferrer"
 			className="inline-flex items-center rounded-md border border-fd-border bg-fd-card px-1 py-0.5 text-sm text-fd-muted-foreground transition-colors hover:bg-fd-accent"
 		>
-			{!data ? "..." : (data.tag_name ?? "No release yet")}
+			{isLoading ? "..." : (data?.tag_name ?? "No release yet")}
 		</a>
 	);
 }

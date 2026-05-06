@@ -98,11 +98,16 @@ function Home() {
 
 					<div className="relative">
 						<div className="hero-img-bg" />
-						<img
-							src="/assets/docs/oraca-apps-screenshot.png"
-							alt="OrcaCD Dashboard"
-							className="rounded-2xl max-w-full md:max-w-2xl relative z-10"
-						/>
+						<picture>
+							<source type="image/avif" srcSet="/assets/docs/oraca-apps-screenshot.avif" />
+							<source type="image/webp" srcSet="/assets/docs/oraca-apps-screenshot.webp" />
+							<img
+								src="/assets/docs/oraca-apps-screenshot.png"
+								alt="OrcaCD Dashboard"
+								className="rounded-2xl max-w-full md:max-w-2xl relative z-10"
+								fetchPriority="high"
+							/>
+						</picture>
 					</div>
 				</div>
 			</section>

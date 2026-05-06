@@ -63,53 +63,46 @@ function SmallFeature({
 function Home() {
 	return (
 		<HomeLayout {...baseOptions()} links={navbarLinks}>
-			<section className="relative overflow-hidden border-b border-fd-border">
-				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--color-fd-primary)/0.08,transparent_60%)]" />
-				<div className="relative mx-auto max-w-5xl px-6 py-24 text-center md:py-36">
-					<div className="mb-6 inline-flex items-center gap-2 rounded-full border border-fd-border bg-fd-card px-4 py-1.5 text-sm text-fd-muted-foreground">
-						<Container className="size-4" />
-						GitOps for Docker
-					</div>
-					<h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight text-fd-foreground md:text-6xl">
-						OrcaCD
-					</h1>
-					<p className="mx-auto mt-6 max-w-2xl text-lg text-fd-muted-foreground">
-						OrcaCD is a simple GitOps controller for Docker Compose. Deploy and manage your services
-						with ease, directly from your Git repository.
-					</p>
-					<div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-						<Link
-							to="/docs/$"
-							params={{ _splat: "setup/installation" }}
-							className="inline-flex items-center gap-2 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-medium text-fd-primary-foreground transition-opacity hover:opacity-90"
-						>
-							<Rocket className="size-4" />
-							Get Started
-						</Link>
+			<section className="px-6 py-24 md:py-36 border-b border-fd-border ">
+				<div className="flex flex-col xl:flex-row gap-14 xl:gap-6 justify-between items-center max-w-6xl mx-auto">
+					<div className="flex flex-col">
+						<h1 className="text-4xl font-bold tracking-tight md:text-6xl leading-[1.4] hero-text-bg">
+							OrcaCD
+						</h1>
+						<p className="max-w-2xl text-4xl font-medium text-fd-foreground tracking-tight">
+							GitOps for Docker
+						</p>
+						<p className="max-w-[24rem] text-lg text-fd-muted-foreground mt-4">
+							Deploy and manage your services with ease, directly from your Git repository.
+						</p>
+						<div className="flex flex-wrap items-center gap-4 mt-6">
+							<Link
+								to="/docs/$"
+								params={{ _splat: "setup/installation" }}
+								className="inline-flex items-center gap-2 rounded-lg bg-fd-primary px-5 py-2.5 text-sm font-medium text-fd-primary-foreground transition-opacity hover:opacity-90"
+							>
+								<Rocket className="size-4" />
+								Get Started
+							</Link>
 
-						<Link
-							to="/docs/$"
-							params={{ _splat: "demo" }}
-							className="inline-flex items-center gap-2 rounded-lg bg-fd-secondary px-5 py-2.5 text-sm font-medium text-fd-secondary-foreground transition-opacity hover:opacity-90"
-						>
-							<Play className="size-4" />
-							Demo
-						</Link>
+							<Link
+								to="/docs/$"
+								params={{ _splat: "demo" }}
+								className="inline-flex items-center gap-2 rounded-lg bg-fd-secondary px-5 py-2.5 text-sm font-medium text-fd-secondary-foreground transition-opacity hover:opacity-90"
+							>
+								<Play className="size-4" />
+								Demo
+							</Link>
+						</div>
 					</div>
-				</div>
-			</section>
 
-			<section className="border-b border-fd-border">
-				<div className="mx-auto max-w-5xl px-6 py-16 text-center">
-					<div className="overflow-hidden rounded-xl border border-fd-border bg-fd-card shadow-lg">
-						<div className="flex items-center gap-2 border-b border-fd-border px-4 py-3">
-							<div className="size-3 rounded-full bg-fd-muted-foreground/20" />
-							<div className="size-3 rounded-full bg-fd-muted-foreground/20" />
-							<div className="size-3 rounded-full bg-fd-muted-foreground/20" />
-						</div>
-						<div className="flex items-center justify-center p-12 text-fd-muted-foreground">
-							<p className="text-sm italic">TODO: Add OrcaCD dashboard screenshot image</p>
-						</div>
+					<div className="relative">
+						<div className="hero-img-bg" />
+						<img
+							src="/assets/docs/oraca-apps-screenshot.png"
+							alt="OrcaCD Dashboard"
+							className="rounded-2xl max-w-full md:max-w-2xl relative z-10"
+						/>
 					</div>
 				</div>
 			</section>
@@ -151,7 +144,7 @@ function Home() {
 						<FeatureCard
 							icon={Rocket}
 							title="Lightweight"
-							description="Designed to be resource-efficient. OrcaCD runs with minimal overhead, perfect for home labs and small-scale deployments."
+							description="Designed to be resource-efficient. OrcaCD runs with minimal overhead. Perfect for self-hosting on your infrastructure."
 						/>
 					</div>
 				</div>

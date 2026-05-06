@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 export async function fetcher<JSON = any>(input: RequestInfo, init?: RequestInit): Promise<JSON> {
 	const res = await fetch(input, init);
 	if (!res.ok) {
@@ -6,10 +8,30 @@ export async function fetcher<JSON = any>(input: RequestInfo, init?: RequestInit
 	return (await res.json()) as JSON;
 }
 
-export function getFallbackData(key: string) {
-	const cached = localStorage.getItem(key);
-	if (cached) {
-		return JSON.parse(cached);
-	}
-	return null;
+export function useFallbackData<JSON = any>(key: string) {
+	const [fallbackData, setFallbackData] = useState<JSON | null>(null);
+
+	useEffect(() => {
+		const cached = localStorage.getItem(key);
+		if (cached) {
+			setFallbackData(JSON.parse(cached));
+		}
+
+		const handleStorageChange = (event: StorageEvent) => {
+			if (event.key === key) {
+				if (event.newValue) {
+					setFallbackData(JSON.parse(event.newValue));
+				} else {
+					setFallbackData(null);
+				}
+			}
+		};
+
+		window.addEventListener("storage", handleStorageChange);
+		return () => {
+			window.removeEventListener("storage", handleStorageChange);
+		};
+	}, [key]);
+
+	return fallbackData;
 }

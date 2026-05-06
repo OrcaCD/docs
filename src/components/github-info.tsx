@@ -1,4 +1,4 @@
-import { fetcher, getFallbackData } from "@/lib/fetcher";
+import { fetcher, useFallbackData } from "@/lib/fetcher";
 import { GitFork, Star } from "lucide-react";
 import useSWR from "swr";
 
@@ -7,15 +7,18 @@ const defaultFormatter = new Intl.NumberFormat("en", {
 	maximumFractionDigits: 1,
 });
 
+type RepoInfo = {
+	stargazers_count: number;
+	forks: number;
+};
+
 export function GithubInfo() {
-	const { data } = useSWR<{
-		stargazers_count: number;
-		forks: number;
-	}>("https://api.github.com/repos/OrcaCD/orca-cd", fetcher, {
+	const fallbackData = useFallbackData<RepoInfo>("github_info");
+	const { data } = useSWR<RepoInfo>("https://api.github.com/repos/OrcaCD/orca-cd", fetcher, {
 		onSuccess: (data) => {
 			localStorage.setItem("github_info", JSON.stringify(data));
 		},
-		fallbackData: getFallbackData("github_info"),
+		fallbackData: fallbackData ?? undefined,
 	});
 
 	return (

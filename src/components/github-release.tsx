@@ -1,15 +1,22 @@
-import { fetcher, getFallbackData } from "@/lib/fetcher";
+import { fetcher, useFallbackData } from "@/lib/fetcher";
 import useSWR from "swr";
 
+type ReleaseData = {
+	tag_name: string;
+};
+
 export function GitHubRelease() {
-	const { data, isLoading } = useSWR<{
-		tag_name: string;
-	}>("https://api.github.com/repos/OrcaCD/orca-cd/releases/latest", fetcher, {
-		onSuccess: (data) => {
-			localStorage.setItem("github_release", JSON.stringify(data));
+	const fallbackData = useFallbackData<ReleaseData>("github_release");
+	const { data, isLoading } = useSWR<ReleaseData>(
+		"https://api.github.com/repos/OrcaCD/orca-cd/releases/latest",
+		fetcher,
+		{
+			onSuccess: (data) => {
+				localStorage.setItem("github_release", JSON.stringify(data));
+			},
+			fallbackData: fallbackData ?? undefined,
 		},
-		fallbackData: getFallbackData("github_release"),
-	});
+	);
 
 	return (
 		<a

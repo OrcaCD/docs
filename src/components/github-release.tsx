@@ -6,17 +6,28 @@ type ReleaseData = {
 };
 
 export function GitHubRelease() {
-	const fallbackData = useFallbackData<ReleaseData>("github_release");
+	const {
+		data: fallbackData,
+		hasFreshData,
+		setCachedData,
+		markCacheWindow,
+	} = useFallbackData<ReleaseData>("github_release");
 	const { data, isLoading } = useSWR<ReleaseData>(
 		"https://api.github.com/repos/OrcaCD/orca-cd/releases/latest",
 		fetcher,
 		{
-			onSuccess: (data) => {
-				localStorage.setItem("github_release", JSON.stringify(data));
-			},
+			onSuccess: setCachedData,
+			onError: markCacheWindow,
 			fallbackData: fallbackData ?? undefined,
+			revalidateOnMount: !hasFreshData,
+			revalidateOnFocus: false,
+			revalidateOnReconnect: false,
+			shouldRetryOnError: false,
 		},
 	);
+
+	const releaseData = data ?? fallbackData;
+	const isPending = !releaseData && isLoading;
 
 	return (
 		<a
@@ -25,7 +36,7 @@ export function GitHubRelease() {
 			rel="noopener noreferrer"
 			className="inline-flex items-center rounded-md border border-fd-border bg-fd-card px-1 py-0.5 text-sm text-fd-muted-foreground transition-colors hover:bg-fd-accent"
 		>
-			{isLoading ? "..." : (data?.tag_name ?? "No release yet")}
+			{isPending ? "..." : (releaseData?.tag_name ?? "No release yet")}
 		</a>
 	);
 }

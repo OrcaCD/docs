@@ -13,13 +13,23 @@ type RepoInfo = {
 };
 
 export function GithubInfo() {
-	const fallbackData = useFallbackData<RepoInfo>("github_info");
+	const {
+		data: fallbackData,
+		hasFreshData,
+		setCachedData,
+		markCacheWindow,
+	} = useFallbackData<RepoInfo>("github_info");
 	const { data } = useSWR<RepoInfo>("https://api.github.com/repos/OrcaCD/orca-cd", fetcher, {
-		onSuccess: (data) => {
-			localStorage.setItem("github_info", JSON.stringify(data));
-		},
+		onSuccess: setCachedData,
+		onError: markCacheWindow,
 		fallbackData: fallbackData ?? undefined,
+		revalidateOnMount: !hasFreshData,
+		revalidateOnFocus: false,
+		revalidateOnReconnect: false,
+		shouldRetryOnError: false,
 	});
+
+	const repoData = data ?? fallbackData;
 
 	return (
 		<a
@@ -37,9 +47,9 @@ export function GithubInfo() {
 			</p>
 			<div className="flex text-xs items-center gap-1 text-fd-muted-foreground">
 				<Star className="size-3" />
-				<span>{!data ? "..." : defaultFormatter.format(data.stargazers_count)}</span>
+				<span>{!repoData ? "..." : defaultFormatter.format(repoData.stargazers_count)}</span>
 				<GitFork className="size-3 ms-2" />
-				<span>{!data ? "..." : defaultFormatter.format(data.forks)}</span>
+				<span>{!repoData ? "..." : defaultFormatter.format(repoData.forks)}</span>
 			</div>
 		</a>
 	);

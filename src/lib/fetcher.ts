@@ -93,14 +93,6 @@ export function useFallbackData<JSON = any>(key: string, ttlMs = DEFAULT_CACHE_T
 		});
 	};
 
-	const setCachedData = (data: JSON) => {
-		setCacheEntry(data);
-	};
-
-	const markCacheWindow = () => {
-		setCacheEntry(fallbackData.data);
-	};
-
 	useEffect(() => {
 		setFallbackData(readFallbackData<JSON>(key));
 
@@ -119,7 +111,7 @@ export function useFallbackData<JSON = any>(key: string, ttlMs = DEFAULT_CACHE_T
 	return {
 		data: fallbackData.data,
 		hasFreshData: fallbackData.hasFreshData,
-		setCachedData,
-		markCacheWindow,
+		setCachedData: setCacheEntry,
+		markCacheWindow: () => setCacheEntry(fallbackData.data),
 	};
 }

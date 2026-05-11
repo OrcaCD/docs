@@ -8,22 +8,22 @@ import {
 import type { BaseLayoutProps, LinkItemType } from "fumadocs-ui/layouts/shared";
 import { GitHubRelease } from "@/components/github-release";
 import { GithubInfo } from "@/components/github-info";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 
 export function baseOptions(): BaseLayoutProps {
 	const navigate = useNavigate();
 
-	const handleRightClick = (e: React.MouseEvent) => {
+	const handleRightClick = async (e: React.MouseEvent) => {
 		e.preventDefault();
-		navigate({ to: "/docs/$", params: { _splat: "brand" } });
+		await navigate({ to: "/docs/$", params: { _splat: "brand" } });
 	};
 	return {
 		nav: {
 			title: (
-				<Link to="/" onContextMenu={handleRightClick} className="flex">
+				<div onContextMenu={handleRightClick} className="flex">
 					<img src="/assets/logo-dark.svg" alt="OrcaCD Logo" className="size-6 mr-2" />
 					<span className="font-medium">OrcaCD</span>
-				</Link>
+				</div>
 			),
 			transparentMode: "top",
 		},

@@ -5,7 +5,52 @@ description: Learn how to use a reverse proxy with OrcaCD
 
 ## Nginx
 
-TODO
+To use Nginx as a reverse proxy for OrcaCD, expose the Hub on localhost only and forward traffic from your public domain to the Hub port.
+
+Use this `server` block in your Nginx config:
+
+```nginx lineNumbers
+server {
+  listen 80;
+  server_name orcacd.example.com;
+
+  location / {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_http_version 1.1;
+
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    # Required for WebSocket connections.
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+  }
+}
+```
+
+Now when registering an agent, you can use following URL as the Hub URL:
+
+```
+HUB_URL=http://orcacd.example.com
+```
+
+## Caddy
+
+To use Caddy as a reverse proxy for OrcaCD, add the following to your `Caddyfile`:
+
+```text lineNumbers
+orcacd.example.com {
+  reverse_proxy 127.0.0.1:8080
+}
+```
+
+Now when registering an agent, you can use following URL as the Hub URL:
+
+```
+HUB_URL=https://orcacd.example.com
+```
 
 ## Traefik
 

@@ -16,13 +16,13 @@ This website is built with [Fumadocs](https://www.fumadocs.dev/) and [Tanstack S
 1. Install the dependencies:
 
 ```bash
-npm install
+pnpm install
 ```
 
 2. Start the development server:
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ### Structure

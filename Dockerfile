@@ -1,4 +1,4 @@
-FROM ghcr.io/pnpm/pnpm:11.1.1 AS install-deps
+FROM ghcr.io/pnpm/pnpm:11.2.1 AS install-deps
 
 WORKDIR /app
 COPY package.json ./
@@ -13,7 +13,7 @@ WORKDIR /app
 
 RUN apk add --no-cache git
 
-COPY --exclude=node_modules . .
+COPY . .
 COPY --from=install-deps /app/node_modules ./node_modules
 
 RUN node --run build

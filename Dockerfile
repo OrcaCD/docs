@@ -1,13 +1,22 @@
+FROM ghcr.io/pnpm/pnpm:11.2.1 AS install-deps
+
+WORKDIR /app
+COPY package.json ./
+COPY pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm i --frozen-lockfile --store-dir /pnpm/store
+
 FROM node:26-alpine AS builder
 
 WORKDIR /app
 
 RUN apk add --no-cache git
 
-COPY --exclude=node_modules . .
-RUN npm ci
+COPY . .
+COPY --from=install-deps /app/node_modules ./node_modules
 
-RUN npm run build
+RUN node --run build
 
 FROM nginx:1-alpine
 

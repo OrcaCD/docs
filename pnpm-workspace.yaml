@@ -1,0 +1,20 @@
+ignorePnpmfile: true
+blockExoticSubdeps: true
+minimumReleaseAge: 2880 # 2 days
+trustPolicy: no-downgrade
+trustPolicyIgnoreAfter: 5760 # 4 days
+ignoreScripts: true
+publicHoistPattern:
+  - "@shikijs/*"
+allowBuilds:
+supportedArchitectures:
+  os:
+    - linux
+    - win32
+    - darwin
+  cpu:
+    - x64
+    - arm64
+  libc:
+    - glibc
+    - musl

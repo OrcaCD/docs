@@ -1,4 +1,4 @@
-FROM ghcr.io/pnpm/pnpm:11.5.0 AS install-deps
+FROM ghcr.io/pnpm/pnpm:11.5.2 AS install-deps
 
 WORKDIR /app
 COPY package.json ./

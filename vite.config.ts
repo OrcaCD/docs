@@ -61,6 +61,9 @@ export default defineConfig({
 				{
 					path: "/llms.txt",
 				},
+				{
+					path: "/sitemap.xml",
+				},
 				...llmDocPages.map((path) => ({ path })),
 			],
 		}),

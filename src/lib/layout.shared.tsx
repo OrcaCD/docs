@@ -15,7 +15,7 @@ export function baseOptions(): BaseLayoutProps {
 
 	const handleRightClick = async (e: React.MouseEvent) => {
 		e.preventDefault();
-		await navigate({ to: "/docs/$", params: { _splat: "brand" } });
+		await navigate({ to: "/docs/$", params: { _splat: "brand" }, reloadDocument: true });
 	};
 	return {
 		nav: {

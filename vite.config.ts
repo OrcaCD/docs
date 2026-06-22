@@ -53,6 +53,9 @@ export default defineConfig({
 					path: "/docs",
 				},
 				{
+					path: "/docs/brand",
+				},
+				{
 					path: "/api/search",
 				},
 				{

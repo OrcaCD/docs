@@ -7,14 +7,12 @@ A **Repository** in OrcaCD is a Git repository that contains Docker Compose file
 
 ## Supported Providers
 
-| Provider      | Value          |
-| ------------- | -------------- |
-| GitHub        | `github`       |
-| GitLab        | `gitlab`       |
-| Gitea         | `gitea`        |
-| Azure DevOps  | `azure_devops` |
-| Bitbucket     | `bitbucket`    |
-| Generic (Git) | `generic`      |
+- GitHub
+- GitLab
+- Gitea
+- Azure DevOps
+- Bitbucket
+- Generic (Git)
 
 ## Adding a Repository
 
@@ -31,7 +29,7 @@ OrcaCD will immediately attempt to clone the repository and perform an initial s
 
 ### None
 
-For public repositories, no credentials are required.
+For public repositories, no credentials are required **but recommended** for security.
 
 ### Token (HTTPS)
 
@@ -40,14 +38,6 @@ Use a personal access token or deploy token. Enter the token in the **Auth Token
 For GitHub, create a [fine-grained personal access token](https://github.com/settings/tokens) with read access to **Contents**.
 
 For GitLab, create a [project access token](https://docs.gitlab.com/ee/user/project/settings/project_access_tokens.html) with `read_repository` scope.
-
-### Basic Auth (HTTPS)
-
-Some providers (e.g., Azure DevOps, Gitea) use username + password or username + token. Enter both in the **Auth User** and **Auth Token** fields.
-
-### SSH Key
-
-Provide an SSH private key for key-based authentication. The corresponding public key must be added to your Git provider as a deploy key.
 
 ## Sync Strategies
 
@@ -90,10 +80,6 @@ The repository is only synced when you explicitly trigger a sync from the UI or 
 For GitHub repositories, you can enable **GitHub Actions OIDC** integration. This allows GitHub Actions workflows to trigger deployments directly without storing a long-lived token in your CI secrets.
 
 See the [GitHub Actions guide](/docs/guides/github-actions) for details.
-
-## Testing the Connection
-
-Before saving, you can click **Test Connection** to verify that OrcaCD can reach the repository with the provided credentials.
 
 ## Repository Status
 

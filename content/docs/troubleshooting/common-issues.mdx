@@ -11,7 +11,7 @@ description: Solutions to frequently encountered problems
 
 1. Verify `HUB_URL` in the Agent's `.env` is correct and reachable from the Agent's host.
 2. Confirm the `AUTH_TOKEN` matches the token generated for that Agent in the Hub UI.
-3. Check Agent logs: `docker compose logs agent` — look for connection errors.
+3. Check Agent logs: `docker compose logs agent` and look for connection errors.
 4. If the Hub is behind a reverse proxy, make sure WebSocket upgrades are forwarded correctly. See the [Reverse Proxy guide](/docs/guides/reverse-proxy).
 
 ## Hub is not accessible / returns 502

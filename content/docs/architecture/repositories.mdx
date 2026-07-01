@@ -57,7 +57,7 @@ OrcaCD listens for push events from your Git provider via webhook. This is more 
 #### Setting Up a Webhook
 
 1. Add the repository with sync type **Webhook**.
-2. After saving, open the repository settings — a webhook URL and secret are generated.
+2. After saving, open the repository settings. A webhook URL and secret should be generated.
 3. Register this webhook in your Git provider:
 
    **GitHub:** Settings → Webhooks → Add webhook
@@ -83,9 +83,9 @@ See the [GitHub Actions guide](/docs/guides/github-actions) for details.
 
 ## Repository Status
 
-| Status    | Meaning                                       |
-| --------- | --------------------------------------------- |
-| `success` | Last sync completed without errors            |
-| `syncing` | Sync is in progress                           |
-| `failed`  | Last sync failed — hover for the error detail |
-| `unknown` | Repository has not been synced yet            |
+| Status    | Meaning                            |
+| --------- | ---------------------------------- |
+| `success` | Last sync completed without errors |
+| `syncing` | Sync is in progress                |
+| `failed`  | Last sync failed                   |
+| `unknown` | Repository has not been synced yet |

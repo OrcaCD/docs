@@ -29,16 +29,11 @@ hub export [--output <path>]
 docker compose exec hub /app/hub export
 ```
 
-The file is created inside the container under `data/`. Copy it out of the container to include it in your backup strategy:
+The file is created inside the container under `/app/data/`. Copy it out of the container to include it in your backup strategy:
 
 ```bash
 docker compose cp hub:/app/data/hub-export-*.db ./backups/
 ```
-
-<Callout>
-	This command is equivalent to the **backup** command referenced in the [Upgrading
-	guide](/docs/setup/upgrading).
-</Callout>
 
 ## import
 
@@ -110,7 +105,7 @@ docker compose run --rm \
 docker compose up -d hub
 ```
 
-After a successful rotation, all agent tokens and user sessions signed with the old secret are invalidated. Users need to log in again and agents need their tokens re-issued (or simply reconnect — the agent will re-authenticate automatically if the hub is reachable).
+After a successful rotation, all agent tokens and user sessions signed with the old secret are invalidated. Users need to log in again and agents need their tokens re-issued (or simply reconnect. The agent will re-authenticate automatically if the hub is reachable).
 
 ## reset-password
 

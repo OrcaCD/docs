@@ -1,0 +1,49 @@
+---
+title: GitHub Actions
+description: Trigger OrcaCD deployments from GitHub Actions using OIDC
+---
+
+OrcaCD supports triggering deployments directly from GitHub Actions using [GitHub's OIDC tokens](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect). This means you don't need to store any long-lived credentials in your repository secrets. The identity of the workflow is verified cryptographically.
+
+## Prerequisites
+
+- A GitHub repository connected in OrcaCD with provider type **GitHub**
+- **GitHub Actions OIDC** enabled on that repository in OrcaCD (Repository Settings → enable the toggle)
+- The OrcaCD Hub must be reachable from GitHub's network
+
+## How It Works
+
+When a GitHub Actions workflow runs, it requests a short-lived OIDC token from GitHub. OrcaCD verifies this token against GitHub's public OIDC endpoint and checks that:
+
+1. The token's repository claim matches a GitHub repository registered in OrcaCD with GitHub Actions OIDC enabled.
+2. The workflow was **not** triggered by a `pull_request` or `pull_request_target` event (to prevent untrusted forks from triggering deployments).
+
+If verification succeeds, OrcaCD finds all applications linked to the matching repository and branch, then dispatches the requested actions.
+
+## Example Workflow
+
+Add a step at the end of your CI workflow to notify OrcaCD after a successful build or image push:
+
+```yaml
+permissions:
+  id-token: write
+
+- uses: OrcaCD/deploy-action@...
+  with:
+    # The OrcaCD hub URL (e.g., https://orca.example.com)
+    # Required
+    hub: https://orca.example.com
+
+    # Whether to sync the repo content (compose files)
+    # Optional, default: true
+    syncRepo: true
+
+    # Whether to pull the latest container image versions
+    # Optional, default: false
+    pullImages: false
+```
+
+## Branch and Tag Support
+
+- **Branch pushes**: OrcaCD deploys all applications linked to the pushed branch.
+- **Tag pushes**: OrcaCD resolves which branches the tagged commit belongs to and deploys all applications linked to those branches.

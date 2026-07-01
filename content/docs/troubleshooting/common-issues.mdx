@@ -3,4 +3,62 @@ title: Common Issues
 description: Solutions to frequently encountered problems
 ---
 
-No issues have been documented yet. If you encounter a problem, please report it in the [GitHub Issues](https://github.com/OrcaCD/orca-cd/issues/new?template=bug.yml) and we will investigate it as soon as possible.
+## Agent stays Offline after connecting
+
+**Symptoms:** The Agent is running but shows as **Offline** in the Hub UI.
+
+**Checks:**
+
+1. Verify `HUB_URL` in the Agent's `.env` is correct and reachable from the Agent's host.
+2. Confirm the `AUTH_TOKEN` matches the token generated for that Agent in the Hub UI.
+3. Check Agent logs: `docker compose logs agent` — look for connection errors.
+4. If the Hub is behind a reverse proxy, make sure WebSocket upgrades are forwarded correctly. See the [Reverse Proxy guide](/docs/guides/reverse-proxy).
+
+## Hub is not accessible / returns 502
+
+**Checks:**
+
+1. Confirm the Hub container is running: `docker compose ps`
+2. Check Hub logs: `docker compose logs hub`
+3. Verify your reverse proxy is forwarding to the correct port (default: `8080`).
+4. If you set `TRUSTED_PROXIES`, confirm the proxy's IP is included. An incorrect value can cause the Hub to reject requests.
+
+## Deployment is stuck in "Syncing"
+
+**Symptoms:** An application stays in the `syncing` state indefinitely.
+
+**Checks:**
+
+1. Verify the Agent is online.
+2. Check Agent logs for errors during the Docker Compose up/pull step.
+3. Ensure the Agent has access to the Docker socket (`/var/run/docker.sock`).
+4. If the Compose file references private images, confirm the Agent host has credentials to pull them (e.g., `docker login` was run on that host).
+
+## Repository sync fails with authentication error
+
+**Symptoms:** Sync status shows `failed` with an authentication error.
+
+**Checks:**
+
+1. Confirm the auth token is still valid and has not expired or been revoked.
+2. For token auth, verify the token has `read_repository` (GitLab) or `Contents: read` (GitHub) permissions.
+3. Use the **Test Connection** button in the repository settings to check credentials without triggering a full sync.
+
+## Webhook sync not triggering
+
+**Symptoms:** Pushes to the repository do not trigger a sync.
+
+**Checks:**
+
+1. Confirm the webhook URL and secret in your Git provider match what OrcaCD shows in the repository settings.
+2. Check that the Hub is publicly reachable on the configured `APP_URL`.
+3. Review the webhook delivery logs in your Git provider (GitHub: Settings → Webhooks → Recent Deliveries) to see if the request reached the Hub.
+4. Verify the webhook is configured to send **push** events.
+
+## Cannot log in after enabling OIDC / disabling local auth
+
+If you locked yourself out by disabling local authentication, see [Account Recovery](/docs/troubleshooting/account-recovery).
+
+---
+
+If your issue is not listed here, please report it in [GitHub Issues](https://github.com/OrcaCD/orca-cd/issues/new?template=bug.yml).

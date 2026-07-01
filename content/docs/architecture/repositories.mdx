@@ -1,0 +1,91 @@
+---
+title: Repositories
+description: Connecting and managing Git repositories in OrcaCD
+---
+
+A **Repository** in OrcaCD is a Git repository that contains Docker Compose files. OrcaCD keeps the repository in sync with its remote and uses it as the source of truth for your deployments.
+
+## Supported Providers
+
+- GitHub
+- GitLab
+- Gitea
+- Azure DevOps
+- Bitbucket
+- Generic (Git)
+
+## Adding a Repository
+
+1. Navigate to the **Repositories** page and click **Add Repository**.
+2. Enter the repository URL (e.g., `https://github.com/your-org/your-repo`).
+3. Select the provider.
+4. Choose an authentication method.
+5. Choose a sync strategy.
+6. Save.
+
+OrcaCD will immediately attempt to clone the repository and perform an initial sync.
+
+## Authentication Methods
+
+### None
+
+For public repositories, no credentials are required **but recommended** for security.
+
+### Token (HTTPS)
+
+Use a personal access token or deploy token. Enter the token in the **Auth Token** field.
+
+For GitHub, create a [fine-grained personal access token](https://github.com/settings/tokens) with read access to **Contents**.
+
+For GitLab, create a [project access token](https://docs.gitlab.com/ee/user/project/settings/project_access_tokens.html) with `read_repository` scope.
+
+## Sync Strategies
+
+### Polling
+
+OrcaCD periodically checks the remote repository for new commits. The minimum polling interval is **30 seconds**; the default is **60 seconds**.
+
+Use polling when:
+
+- You cannot expose an inbound webhook endpoint
+- You want a simple setup without additional configuration
+
+### Webhook
+
+OrcaCD listens for push events from your Git provider via webhook. This is more efficient than polling and reacts to new commits instantly.
+
+#### Setting Up a Webhook
+
+1. Add the repository with sync type **Webhook**.
+2. After saving, open the repository settings — a webhook URL and secret are generated.
+3. Register this webhook in your Git provider:
+
+   **GitHub:** Settings → Webhooks → Add webhook
+   - Payload URL: `https://your-hub-url/api/v1/webhooks/repositories/<id>`
+   - Content type: `application/json`
+   - Secret: copy from OrcaCD
+   - Events: **Just the push event**
+
+   **GitLab:** Settings → Webhooks
+   - URL: `https://your-hub-url/api/v1/webhooks/repositories/<id>`
+   - Secret token: copy from OrcaCD
+   - Trigger: **Push events**
+
+### Manual
+
+The repository is only synced when you explicitly trigger a sync from the UI or API.
+
+## GitHub Actions OIDC
+
+For GitHub repositories, you can enable **GitHub Actions OIDC** integration. This allows GitHub Actions workflows to trigger deployments directly without storing a long-lived token in your CI secrets.
+
+See the [GitHub Actions guide](/docs/guides/github-actions) for details.
+
+## Repository Status
+
+| Status    | Meaning                                       |
+| --------- | --------------------------------------------- |
+| `success` | Last sync completed without errors            |
+| `syncing` | Sync is in progress                           |
+| `failed`  | Last sync failed — hover for the error detail |
+| `unknown` | Repository has not been synced yet            |

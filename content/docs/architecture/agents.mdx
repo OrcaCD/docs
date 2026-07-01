@@ -1,0 +1,100 @@
+---
+title: Agents
+description: Managing agents and connecting them to the Hub
+---
+
+An **Agent** is a lightweight service that runs on the target host where your Docker containers are deployed. It connects to the Hub via WebSocket, receives deployment instructions, and reports status back. You can run multiple agents — one per environment, server, or cluster.
+
+## Creating an Agent
+
+Before deploying the Agent binary, you need to register it in the Hub to obtain an authentication token.
+
+1. Navigate to the **Agents** page in the OrcaCD UI.
+2. Click **Add Agent** and give it a name (e.g., `production`, `staging`).
+3. Copy the generated `AUTH_TOKEN` — it is only shown once.
+
+![Create Agent](/assets/docs/create-agent.png?url)
+
+## Deploying an Agent
+
+### Same Host as the Hub
+
+The default `docker-compose.yml` includes both Hub and Agent. If you are running both on the same machine, just set the `AUTH_TOKEN` in your `.env` and restart:
+
+```bash
+docker compose up -d
+```
+
+### Remote Host
+
+To deploy an Agent on a separate server, copy only the Agent service definition to that machine.
+
+Create a `docker-compose.yml`:
+
+```yaml
+services:
+  agent:
+    image: ghcr.io/orcacd/agent:latest
+    container_name: orca-agent
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+```
+
+Create a `.env` file:
+
+```bash
+HUB_URL=https://your-hub-url.example.com
+AUTH_TOKEN=<token-from-hub>
+```
+
+Start the Agent:
+
+```bash
+docker compose up -d
+```
+
+The Agent will connect to the Hub. Once connected, its status in the Hub UI changes to **Online**.
+
+<Callout>
+	The Agent needs access to the Docker socket (`/var/run/docker.sock`) to manage containers on the
+	host.
+</Callout>
+
+## Multiple Agents
+
+You can register as many agents as you need — for example, one per environment:
+
+| Agent name   | Purpose                       |
+| ------------ | ----------------------------- |
+| `production` | Deploys to the production VPS |
+| `staging`    | Deploys to a staging server   |
+| `dev`        | Local development environment |
+
+Each Application in OrcaCD is assigned to exactly one Agent. You can split workloads across agents freely.
+
+## Rotating an Agent Token
+
+If a token is compromised or needs to be rotated, navigate to the Agent in the UI, open the options menu, and select **Rotate Token**. A new token is generated immediately and the old token becomes invalid.
+
+Update the `AUTH_TOKEN` in the Agent's `.env` and restart it:
+
+```bash
+docker compose up -d
+```
+
+You can also rotate tokens via the API:
+
+```bash
+POST /api/v1/agents/:id/rotate-token
+```
+
+## Agent Status
+
+| Status    | Meaning                                             |
+| --------- | --------------------------------------------------- |
+| `online`  | Agent is connected and ready to receive deployments |
+| `offline` | Agent has disconnected or has not yet connected     |
+
+Deployments to an offline Agent are queued until it reconnects.

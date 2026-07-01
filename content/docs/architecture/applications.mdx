@@ -1,0 +1,89 @@
+---
+title: Applications
+description: Creating and managing applications in OrcaCD
+---
+
+An **Application** in OrcaCD represents a Docker Compose deployment. It links a repository (and a specific branch and file path) to an Agent, which runs the actual containers.
+
+## Creating an Application
+
+1. Navigate to the **Applications** page and click **Add Application**.
+2. Fill in the required fields:
+
+   | Field          | Description                                                                                    |
+   | -------------- | ---------------------------------------------------------------------------------------------- |
+   | **Name**       | Display name for the application                                                               |
+   | **Repository** | The repository containing the Compose file                                                     |
+   | **Branch**     | The branch to track (e.g., `main`, `production`)                                               |
+   | **Path**       | Path to the `docker-compose.yml` inside the repository (e.g., `apps/myapp/docker-compose.yml`) |
+   | **Agent**      | The agent that will execute the deployment                                                     |
+
+3. Click **Create**.
+
+OrcaCD will immediately sync the repository and deploy the Compose file to the selected Agent.
+
+## Application Status
+
+Each application shows two status indicators:
+
+### Sync Status
+
+| Status        | Meaning                                              |
+| ------------- | ---------------------------------------------------- |
+| `synced`      | Deployed commit matches the latest repository commit |
+| `out_of_sync` | A new commit exists that has not been deployed yet   |
+| `syncing`     | A deployment is currently in progress                |
+| `unknown`     | No deployment has been triggered yet                 |
+
+### Health Status
+
+| Status      | Meaning                                              |
+| ----------- | ---------------------------------------------------- |
+| `healthy`   | All containers from the Compose file are running     |
+| `unhealthy` | One or more containers are stopped or in a bad state |
+| `unknown`   | Health has not been checked yet                      |
+
+## Triggering a Deployment
+
+OrcaCD automatically deploys when the tracked repository branch receives a new commit (depending on the repository sync strategy). You can also trigger a deployment manually:
+
+1. Open the application.
+2. Click **Deploy** in the top-right corner.
+
+This forces an immediate sync and deployment regardless of the current sync status.
+
+## Application Settings
+
+Open an application and navigate to the **Settings** tab to configure it.
+
+### General
+
+Change the application name, icon, linked repository, branch, path, or agent.
+
+### Image Polling
+
+Image polling lets OrcaCD automatically pull updated Docker images and restart containers, even when no Compose file has changed. This is useful for continuous delivery workflows where a CI pipeline pushes new image tags.
+
+| Setting                  | Description                                                                  |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| **Enable image polling** | Turns image polling on or off                                                |
+| **Polling interval**     | How often to check for new images (minimum 30 seconds, default 120 seconds)  |
+| **Delete old images**    | When enabled, old images are removed from the host after a successful update |
+
+## Image Pull Webhooks
+
+Instead of polling, you can trigger an image pull from your container registry via a webhook. This is ideal for registry-side push notifications.
+
+1. Open the application settings.
+2. In the **Image Pull Webhook** section, click **Generate Webhook**.
+3. OrcaCD returns a webhook URL and secret.
+4. Register this webhook in your container registry (e.g., Docker Hub, GitHub Container Registry, Harbor).
+
+When the registry sends a push event to the webhook URL, OrcaCD instructs the Agent to pull the latest image and restart the affected container.
+
+<Callout>
+	The Agent must be online for the image pull webhook to succeed. If the Agent is offline, the event
+	is not queued.
+</Callout>
+
+To revoke a webhook and generate a new one, click **Revoke Webhook** and then **Generate Webhook** again.

@@ -1,0 +1,121 @@
+---
+title: CLI Reference
+description: Hub command-line interface for backup, restore, and key management
+---
+
+The Hub binary includes a CLI for administrative tasks that cannot be performed through the web UI. Run any command with `--help` to see all available options.
+
+When using Docker, prefix commands with `docker compose exec hub /app/hub`:
+
+```bash
+docker compose exec hub /app/hub <command>
+```
+
+## export
+
+Creates a consistent backup of the Hub database. The export uses SQLite's `VACUUM INTO` and is safe to run while the Hub is running.
+
+```bash
+hub export [--output <path>]
+```
+
+| Flag             | Default                         | Description                     |
+| ---------------- | ------------------------------- | ------------------------------- |
+| `-o`, `--output` | `hub-export-YYYYMMDD-HHMMSS.db` | Output path for the backup file |
+
+**With Docker:**
+
+```bash
+docker compose exec hub /app/hub export
+```
+
+The file is created inside the container under `data/`. Copy it out of the container to include it in your backup strategy:
+
+```bash
+docker compose cp hub:/app/data/hub-export-*.db ./backups/
+```
+
+<Callout>
+	This command is equivalent to the **backup** command referenced in the [Upgrading
+	guide](/docs/setup/upgrading).
+</Callout>
+
+## import
+
+Restores a database from a backup file. The existing database is copied to a rollback file before the restore, so you can recover if something goes wrong.
+
+<Callout type="warn">
+	The Hub server must be **stopped** before running import. All existing data is overridden by the
+	backup.
+</Callout>
+
+```bash
+hub import <file> [--yes]
+```
+
+| Argument / Flag | Description                   |
+| --------------- | ----------------------------- |
+| `<file>`        | Path to the backup `.db` file |
+| `-y`, `--yes`   | Skip the confirmation prompt  |
+
+**With Docker:**
+
+```bash
+# Copy the backup into the container
+docker compose cp ./backups/hub-export-20240101-120000.db hub:/app/data/
+
+# Stop the hub
+docker compose stop hub
+
+# Run import
+docker compose run --rm hub /app/hub import data/hub-export-20240101-120000.db
+
+# Restart the hub
+docker compose up -d hub
+```
+
+## key rotate
+
+Re-encrypts all sensitive database fields with a new `APP_SECRET`. Use this when you need to rotate your encryption key.
+
+<Callout type="warn">
+	The Hub server must be **stopped** before rotating the key. Create a database backup first. If the
+	rotation fails, restore the backup, keep the old `APP_SECRET`, and retry.
+</Callout>
+
+```bash
+hub key rotate [--old-secret <secret>] [--yes]
+```
+
+| Flag           | Description                                                                   |
+| -------------- | ----------------------------------------------------------------------------- |
+| `--old-secret` | Previous `APP_SECRET` value. Can also be set via the `OLD_APP_SECRET` env var |
+| `-y`, `--yes`  | Skip the confirmation prompt                                                  |
+
+**With Docker:**
+
+```bash
+# 1. Create a backup
+docker compose exec hub /app/hub export
+
+# 2. Stop the hub
+docker compose stop hub
+
+# 3. Rotate the key (set the NEW APP_SECRET in .env first)
+docker compose run --rm \
+  -e OLD_APP_SECRET=<old-secret> \
+  hub /app/hub key rotate --yes
+
+# 4. Restart the hub with the new APP_SECRET
+docker compose up -d hub
+```
+
+After a successful rotation, all agent tokens and user sessions signed with the old secret are invalidated. Users need to log in again and agents need their tokens re-issued (or simply reconnect — the agent will re-authenticate automatically if the hub is reachable).
+
+## reset-password
+
+Resets a user's password and forces them to change it on the next login. See [Account Recovery](/docs/troubleshooting/account-recovery) for full details.
+
+```bash
+hub reset-password <user-id-or-email>
+```

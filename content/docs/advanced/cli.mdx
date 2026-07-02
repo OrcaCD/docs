@@ -11,6 +11,12 @@ When using Docker, prefix commands with `docker compose exec hub /app/hub`:
 docker compose exec hub /app/hub <command>
 ```
 
+<Callout>
+	Commands that ask for a yes/no confirmation (`import`, `key rotate`) don't require `-it`. Without
+	an attached terminal, the prompt is treated as "no" and the command safely aborts. For scripted or
+	non-interactive runs, pass `--yes`/`-y` explicitly instead of relying on this behavior.
+</Callout>
+
 ## export
 
 Creates a consistent backup of the Hub database. The export uses SQLite's `VACUUM INTO` and is safe to run while the Hub is running.

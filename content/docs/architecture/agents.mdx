@@ -71,4 +71,4 @@ POST /api/v1/agents/:id/rotate-token
 | `online`  | Agent is connected and ready to receive deployments |
 | `offline` | Agent has disconnected or has not yet connected     |
 
-Deployments to an offline Agent are queued until it reconnects.
+If an Agent is offline, deployment dispatch fails immediately and the application is marked out-of-sync with an error. Deployments are not queued or retried automatically. Trigger the deployment again once the Agent is back online.

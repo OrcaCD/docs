@@ -29,119 +29,58 @@ Use the **Test** button to send a test message and verify that the configuration
 
 ### Discord
 
-Find the webhook token and ID in your Discord server settings under **Integrations → Webhooks**.
+Fill in these fields in the notification form:
 
-```json
-{
-	"webhookId": "1234567890123456789",
-	"token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-	"username": "OrcaCD",
-	"title": "Deployment"
-}
-```
-
-| Field       | Required | Description                                 |
-| ----------- | -------- | ------------------------------------------- |
-| `webhookId` | yes      | The numeric webhook ID from the Discord URL |
-| `token`     | yes      | The token from the Discord webhook URL      |
-| `username`  | no       | Override the bot display name               |
-| `avatarUrl` | no       | Override the bot avatar URL                 |
-| `threadId`  | no       | Send to a specific thread                   |
-| `title`     | no       | Custom message title                        |
+| Field           | Required | Description                                                                                                                                 |
+| --------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Webhook URL** | yes      | Full webhook URL, copied from your Discord server under **Server Settings → Integrations → Webhooks → (select webhook) → Copy Webhook URL** |
+| **Bot Name**    | no       | Override the bot display name                                                                                                               |
+| **Avatar URL**  | no       | Override the bot avatar URL                                                                                                                 |
+| **Thread ID**   | no       | Send to a specific thread                                                                                                                   |
 
 ### Gotify
 
-```json
-{
-	"serverUrl": "https://gotify.example.com",
-	"appToken": "your-app-token",
-	"priority": 5
-}
-```
-
-| Field        | Required | Description                                             |
-| ------------ | -------- | ------------------------------------------------------- |
-| `serverUrl`  | yes      | Full URL of your Gotify instance (http or https)        |
-| `appToken`   | yes      | Application token from the Gotify UI                    |
-| `priority`   | no       | Message priority, between -2 and 10 (default: 5)        |
-| `customPath` | no       | Custom path prefix if Gotify is behind a sub-path proxy |
+| Field           | Required | Description                                                |
+| --------------- | -------- | ---------------------------------------------------------- |
+| **Server URL**  | yes      | Full URL of your Gotify instance (http or https)           |
+| **App Token**   | yes      | Application token, created in the Gotify UI under **Apps** |
+| **Priority**    | yes      | Message priority, between -2 and 10 (suggested default: 5) |
+| **Custom Path** | no       | Custom path prefix if Gotify is behind a sub-path proxy    |
 
 ### Slack
 
-Create an [Incoming Webhook](https://api.slack.com/messaging/webhooks) in your Slack workspace.
-
-```json
-{
-	"webhookUrl": "https://hooks.slack.com/services/T.../B.../...",
-	"title": "OrcaCD"
-}
-```
-
-| Field        | Required | Description                         |
-| ------------ | -------- | ----------------------------------- |
-| `webhookUrl` | yes      | The full Slack Incoming Webhook URL |
-| `title`      | no       | Custom message title                |
+| Field           | Required | Description                                                                                                           |
+| --------------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Webhook URL** | yes      | Create an [Incoming Webhook](https://api.slack.com/messaging/webhooks) in your Slack workspace and paste its URL here |
 
 ### Email (SMTP)
 
-```json
-{
-	"smtpHost": "smtp.example.com",
-	"smtpPort": 587,
-	"username": "user@example.com",
-	"password": "secret",
-	"fromAddress": "orcacd@example.com",
-	"fromName": "OrcaCD",
-	"toAddresses": ["team@example.com"],
-	"useTls": true
-}
-```
-
-| Field         | Required | Description                                     |
-| ------------- | -------- | ----------------------------------------------- |
-| `smtpHost`    | yes      | SMTP server hostname (no scheme or port)        |
-| `smtpPort`    | yes      | SMTP port (e.g., 587 for STARTTLS, 465 for TLS) |
-| `fromAddress` | yes      | Sender email address                            |
-| `toAddresses` | yes      | List of recipient email addresses               |
-| `username`    | no       | SMTP authentication username                    |
-| `password`    | no       | SMTP authentication password                    |
-| `fromName`    | no       | Sender display name                             |
-| `useTls`      | no       | Use STARTTLS (default: `true`)                  |
+| Field            | Required | Description                                     |
+| ---------------- | -------- | ----------------------------------------------- |
+| **SMTP Host**    | yes      | SMTP server hostname (no scheme or port)        |
+| **SMTP Port**    | yes      | SMTP port (e.g., 587 for STARTTLS, 465 for TLS) |
+| **From Address** | yes      | Sender email address                            |
+| **To Addresses** | yes      | Recipient email addresses, one per line         |
+| **Username**     | no       | SMTP authentication username                    |
+| **Password**     | no       | SMTP authentication password                    |
+| **From Name**    | no       | Sender display name                             |
+| **Use TLS**      | no       | Use STARTTLS (default: on)                      |
 
 ### Microsoft Teams
 
-Create an [Incoming Webhook connector](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook) in your Teams channel.
-
-```json
-{
-	"host": "https://your-org.webhook.office.com/webhookb2/...",
-	"title": "OrcaCD"
-}
-```
-
-| Field   | Required | Description                               |
-| ------- | -------- | ----------------------------------------- |
-| `host`  | yes      | The full Teams incoming webhook HTTPS URL |
-| `title` | no       | Custom message title                      |
+| Field           | Required | Description                                                                                                                                                                                        |
+| --------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Webhook URL** | yes      | Create an [Incoming Webhook connector](https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook) in your Teams channel and paste its URL here |
+| **Title**       | no       | Custom message title                                                                                                                                                                               |
 
 ### Generic Webhook
 
 Sends a JSON POST request to any HTTP/HTTPS endpoint.
 
-```json
-{
-	"webhookUrl": "https://your-service.example.com/hook",
-	"headers": {
-		"Authorization": "Bearer secret-token",
-		"X-Source": "orcacd"
-	}
-}
-```
-
-| Field        | Required | Description                                      |
-| ------------ | -------- | ------------------------------------------------ |
-| `webhookUrl` | yes      | Target URL (http or https)                       |
-| `headers`    | no       | Key/value map of additional HTTP request headers |
+| Field           | Required | Description                                                           |
+| --------------- | -------- | --------------------------------------------------------------------- |
+| **Webhook URL** | yes      | Target URL (http or https)                                            |
+| **Headers**     | no       | Additional HTTP request headers, one per line as `Header-Name: value` |
 
 ### Custom (Shoutrrr)
 

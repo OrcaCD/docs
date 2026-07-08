@@ -44,42 +44,17 @@ need one of these for an official use case.
 
 ## Color palette
 
-OrcaCD's UI is built with Tailwind CSS and [shadcn/ui](https://ui.shadcn.com/), with colors defined as
-CSS variables in [`oklch()`](https://oklch.com/) notation so the palette stays perceptually consistent
-between light and dark mode. The brand color is a blue at hue `242` (light mode) / `237` (dark mode).
+OrcaCD's primary brand color is a clear blue. Use it for recognizable brand moments such as logos,
+links, buttons, highlights, and data points that should read as OrcaCD-specific.
 
-### Brand color
+| Color       | Approx. hex | Usage                                           |
+| ----------- | ----------- | ----------------------------------------------- |
+| OrcaCD blue | `#0186c8`   | Primary brand color for light backgrounds       |
+| Bright blue | `#00a4e8`   | Higher-contrast brand blue for dark backgrounds |
+| Near white  | `#fafafa`   | Text or icons placed on the primary brand blue  |
 
-| Token                    | Light mode             | Dark mode              | Approx. hex                          |
-| ------------------------ | ---------------------- | ---------------------- | ------------------------------------ |
-| `--primary` / `--accent` | `oklch(0.59 0.14 242)` | `oklch(0.68 0.15 237)` | `#0186c8` (light) / `#00a4e8` (dark) |
-| `--primary-foreground`   | `oklch(0.98 0.01 237)` | `oklch(0.985 0 0)`     | near white                           |
-
-### Base colors
-
-| Token           | Light mode                          | Dark mode                    |
-| --------------- | ----------------------------------- | ---------------------------- |
-| `--background`  | `oklch(1 0 0)`                      | `hsl(0, 0%, 11%)`            |
-| `--foreground`  | `oklch(0.145 0 0)`                  | `oklch(0.985 0 0)`           |
-| `--card`        | `oklch(1 0 0)`                      | `oklch(0.205 0 0)`           |
-| `--secondary`   | `oklch(0.967 0.001 286.375)`        | `oklch(0.274 0.006 286.033)` |
-| `--muted`       | `oklch(0.97 0 0)`                   | `oklch(0.269 0 0)`           |
-| `--border`      | `oklch(0.922 0 0)`                  | `oklch(1 0 0 / 10%)`         |
-| `--destructive` | `oklch(0.58 0.22 27)` (`≈ #df2225`) | `oklch(0.704 0.191 22.216)`  |
-
-### Chart / data-visualization gradient
-
-A five-step gradient built around the brand blue, used for charts and other data visualizations:
-
-| `--chart-1`            | `--chart-2`            | `--chart-3`            | `--chart-4` (= brand blue) | `--chart-5`            |
-| ---------------------- | ---------------------- | ---------------------- | -------------------------- | ---------------------- |
-| `oklch(0.83 0.10 230)` | `oklch(0.75 0.14 233)` | `oklch(0.68 0.15 237)` | `oklch(0.59 0.14 242)`     | `oklch(0.50 0.12 243)` |
-
-<Callout title="Dark mode" type="info">
-	Dark mode is applied via a `.dark` class on the `<html>` element. Colors get a slightly higher
-	lightness in dark mode (e.g. the brand blue goes from `L 0.59` to `L 0.68`) to stay readable against
-	the dark background.
-</Callout>
+Keep supporting colors neutral and restrained. When creating charts or diagrams, build the palette
+around the OrcaCD blue and use neighboring blue tones only when multiple steps are needed.
 
 ## Typography
 
@@ -87,15 +62,8 @@ OrcaCD uses a single typeface everywhere. **[Geist Mono Variable](https://vercel
 monospace variable font for both UI text and body copy. There is no secondary sans-serif font; the
 monospace look is a deliberate part of the brand identity.
 
-```css
---font-mono: "Geist Mono Variable", monospace;
-```
-
-The font is loaded via the [`@fontsource-variable/geist-mono`](https://fontsource.org/fonts/geist-mono) npm
-package and applied to both `<html>` and `<body>` through the `font-mono` utility class.
-
 ## Shape language
 
-Rounded corners are used consistently across the UI, based on a single `--radius` value (`0.625rem`)
-that scales up and down for different component sizes (`sm`, `md`, `lg`, `xl`, `2xl`, `3xl`, `4xl`).
-Keep this scale when designing new components or marketing assets so they feel consistent with the app.
+Rounded corners are used consistently across OrcaCD surfaces. Keep corners moderate and functional:
+avoid sharp boxes for primary brand materials, but also avoid oversized pill shapes unless they match
+an existing OrcaCD component.

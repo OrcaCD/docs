@@ -12,9 +12,7 @@ docker compose exec hub /app/hub <command>
 ```
 
 <Callout>
-	Commands that ask for a yes/no confirmation (`import`, `key rotate`) don't require `-it`. Without
-	an attached terminal, the prompt is treated as "no" and the command safely aborts. For scripted or
-	non-interactive runs, pass `--yes`/`-y` explicitly instead of relying on this behavior.
+	Most commands do not require an interactive terminal. For commands that require confirmation the `--yes`/`-y` can be used
 </Callout>
 
 ## export
@@ -105,7 +103,7 @@ docker compose stop hub
 # 3. Rotate the key (set the NEW APP_SECRET in .env first)
 docker compose run --rm \
   -e OLD_APP_SECRET=<old-secret> \
-  hub /app/hub key rotate --yes
+  hub /app/hub key rotate
 
 # 4. Restart the hub with the new APP_SECRET
 docker compose up -d hub

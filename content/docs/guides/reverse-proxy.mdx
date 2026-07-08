@@ -27,6 +27,10 @@ server {
     # Required for WebSocket connections.
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection $connection_upgrade;
+
+    # Prevent Websocket being closed by Nginx
+    proxy_send_timeout                 120s;
+    proxy_read_timeout                 120s;
   }
 }
 ```

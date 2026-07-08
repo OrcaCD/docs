@@ -1,0 +1,106 @@
+---
+title: Notifications
+description: Setting up deployment notifications in OrcaCD
+---
+
+OrcaCD can send notifications when a deployment succeeds or fails. Notifications can be scoped to specific applications or applied globally.
+
+## Supported Providers
+
+- Discord
+- Gotify
+- Slack
+- Email (SMTP)
+- Microsoft Teams
+- Generic Webhook
+- Custom (Shoutrrr)
+
+## Creating a Notification
+
+1. Navigate to **Notifications** and click **Add Notification**.
+2. Choose a provider type and enter a name.
+3. Fill in the provider-specific configuration (see below).
+4. Optionally link the notification to specific applications.
+5. Save.
+
+Use the **Test** button to send a test message and verify that the configuration is correct.
+
+## Provider Configuration
+
+### Discord
+
+Fill in these fields in the notification form:
+
+| Field           | Required | Description                                                                                                                                 |
+| --------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Webhook URL** | yes      | Full webhook URL, copied from your Discord server under **Server Settings → Integrations → Webhooks → (select webhook) → Copy Webhook URL** |
+| **Bot Name**    | no       | Override the bot display name                                                                                                               |
+| **Avatar URL**  | no       | Override the bot avatar URL                                                                                                                 |
+| **Thread ID**   | no       | Send to a specific thread                                                                                                                   |
+
+### Gotify
+
+| Field           | Required | Description                                                |
+| --------------- | -------- | ---------------------------------------------------------- |
+| **Server URL**  | yes      | Full URL of your Gotify instance (http or https)           |
+| **App Token**   | yes      | Application token, created in the Gotify UI under **Apps** |
+| **Priority**    | yes      | Message priority, between -2 and 10 (suggested default: 5) |
+| **Custom Path** | no       | Custom path prefix if Gotify is behind a sub-path proxy    |
+
+### Slack
+
+| Field           | Required | Description                                                                                                           |
+| --------------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Webhook URL** | yes      | Create an [Incoming Webhook](https://api.slack.com/messaging/webhooks) in your Slack workspace and paste its URL here |
+
+### Email (SMTP)
+
+| Field            | Required | Description                                     |
+| ---------------- | -------- | ----------------------------------------------- |
+| **SMTP Host**    | yes      | SMTP server hostname (no scheme or port)        |
+| **SMTP Port**    | yes      | SMTP port (e.g., 587 for STARTTLS, 465 for TLS) |
+| **From Address** | yes      | Sender email address                            |
+| **To Addresses** | yes      | Recipient email addresses, one per line         |
+| **Username**     | no       | SMTP authentication username                    |
+| **Password**     | no       | SMTP authentication password                    |
+| **From Name**    | no       | Sender display name                             |
+| **Use TLS**      | no       | Use STARTTLS (default: on)                      |
+
+### Microsoft Teams
+
+| Field           | Required | Description                                                                                                                                                                       |
+| --------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Webhook URL** | yes      | Create an [Incoming Webhook connector](https://support.microsoft.com/en-US/Workflows/send-messages-in-teams-using-incoming-webhooks) in your Teams channel and paste its URL here |
+| **Title**       | no       | Custom message title                                                                                                                                                              |
+
+### Generic Webhook
+
+Sends a JSON POST request to any HTTP/HTTPS endpoint.
+
+| Field           | Required | Description                                                           |
+| --------------- | -------- | --------------------------------------------------------------------- |
+| **Webhook URL** | yes      | Target URL (http or https)                                            |
+| **Headers**     | no       | Additional HTTP request headers, one per line as `Header-Name: value` |
+
+### Custom (Shoutrrr)
+
+For any service supported by [Shoutrrr](https://shoutrrr.nickfedor.com/) that doesn't have a dedicated provider, enter the raw Shoutrrr URL directly.
+
+```
+pushover://token@user
+ntfy://topic@ntfy.sh
+```
+
+Refer to the [Shoutrrr documentation](https://shoutrrr.nickfedor.com/) for the URL format of each service.
+
+## Notification Scope
+
+### Enable by Default
+
+When **Enable by Default** is on, the notification is sent for all applications. Including ones created in the future, unless explicitly unlinked.
+
+### Per-Application
+
+When **Enable by Default** is off, the notification is only sent for the applications listed in the **Applications** field.
+
+You can mix both approaches: use "enable by default" for a global notification channel, and add separate per-application notifications for channels that should only receive specific alerts.

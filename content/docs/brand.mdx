@@ -3,8 +3,67 @@ title: Brand
 description: Brand guidelines for OrcaCD, including logo usage, color palette, typography, and more.
 ---
 
-TODO: Add brand guidelines, including logo usage, color palette, typography, and more.
+This page collects the visual identity of OrcaCD. The logo, color palette, and typography used across
+the app, the marketing site, and this documentation. Use these assets and values when referring to
+OrcaCD in blog posts, talks, integrations, or third-party tooling.
+
+## Name & tagline
+
+- **Name**: OrcaCD (written as one word, capital "O" and "CD")
+- **Tagline**: Simple GitOps for Docker
+- **One-liner**: OrcaCD is a simple GitOps tool for Docker that lets you deploy applications using Git as the source of truth.
 
 ## Logo
 
+The OrcaCD logo is an orca mark on a rounded, colored tile. It is available as a scalable SVG and as
+pre-rendered PNGs in several fixed sizes for places that don't support SVG (favicons, app manifests, etc.).
+
 ![Logo](/assets/logo-dark-256.png?url)
+
+### Available files
+
+| Asset             | Path                           | Notes                                                                               |
+| ----------------- | ------------------------------ | ----------------------------------------------------------------------------------- |
+| Vector logo (SVG) | `/assets/logo-dark.svg`        | Preferred format, scales to any size                                                |
+| PNG raster        | `/assets/logo-dark-{size}.png` | `size` is one of `32`, `64`, `96`, `128`, `144`, `180`, `192`, `256`, `512`, `1024` |
+| Favicon           | `/assets/favicon.ico`          | Multi-resolution ICO (16×16, 32×32)                                                 |
+| Apple touch icon  | `/assets/apple-touch-icon.png` | Used for iOS home screen bookmarks                                                  |
+
+Additional source variants exist (a borderless version and a plain black/white orca mark without the
+background tile) for cases where the default dark tile doesn't fit. Reach out to the maintainers if you
+need one of these for an official use case.
+
+### Usage guidelines
+
+- Do not recolor, recreate, or distort the logo. Use the provided files as-is.
+- Keep clear space around the logo roughly equal to the height of the orca mark itself. Don't crowd
+  it with other text or UI elements.
+- Prefer the SVG wherever possible; fall back to the closest matching PNG size only when SVG isn't supported.
+- The current logo only ships in a dark-tile variant. If you need a version for a dark background, use
+  the borderless or plain-mark source files rather than placing the default tile on a matching dark background.
+
+## Color palette
+
+OrcaCD's primary brand color is a clear blue. Use it for recognizable brand moments such as logos,
+links, buttons, highlights, and data points that should read as OrcaCD-specific.
+
+| Color       | Approx. hex | Usage                                           |
+| ----------- | ----------- | ----------------------------------------------- |
+| OrcaCD blue | `#0186c8`   | Primary brand color for light backgrounds       |
+| Bright blue | `#00a4e8`   | Higher-contrast brand blue for dark backgrounds |
+| Near white  | `#fafafa`   | Text or icons placed on the primary brand blue  |
+
+Keep supporting colors neutral and restrained. When creating charts or diagrams, build the palette
+around the OrcaCD blue and use neighboring blue tones only when multiple steps are needed.
+
+## Typography
+
+OrcaCD uses a single typeface everywhere. **[Geist Mono Variable](https://vercel.com/font)**, a
+monospace variable font for both UI text and body copy. There is no secondary sans-serif font; the
+monospace look is a deliberate part of the brand identity.
+
+## Shape language
+
+Rounded corners are used consistently across OrcaCD surfaces. Keep corners moderate and functional:
+avoid sharp boxes for primary brand materials, but also avoid oversized pill shapes unless they match
+an existing OrcaCD component.

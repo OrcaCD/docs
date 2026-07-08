@@ -1,4 +1,4 @@
-FROM ghcr.io/pnpm/pnpm:11.9.0 AS install-deps
+FROM --platform=$BUILDPLATFORM ghcr.io/pnpm/pnpm:11.10.0 AS install-deps
 
 WORKDIR /app
 COPY package.json ./
@@ -7,7 +7,7 @@ COPY pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm i --frozen-lockfile --store-dir /pnpm/store
 
-FROM node:26-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:26-alpine AS builder
 
 WORKDIR /app
 

@@ -14,7 +14,7 @@ OrcaCD consists of two components: the **Hub**, the central control plane that s
 
 Before you start, make sure you have:
 
-- A machine to run the Hub and Agent on — typically a Linux server or VPS, but any machine with Docker works for testing.
+- A machine to run the Hub and Agent on — typically a Linux server like a VPS, but any machine with Docker works for testing.
 - [Docker Engine](https://docs.docker.com/engine/install/) with the [Docker Compose plugin](https://docs.docker.com/compose/install/) installed.
 - For a publicly reachable setup: a domain with a DNS record pointing to your server, and a reverse proxy for HTTPS. OrcaCD does not bind ports 80/443 or terminate TLS itself — the Hub listens on port `8080` (bound to localhost in the provided compose file), and you put your own reverse proxy (Nginx, Caddy, Traefik, ...) in front of it. See the [reverse proxy guide](../guides/reverse-proxy).
 

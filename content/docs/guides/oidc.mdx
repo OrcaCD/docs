@@ -5,7 +5,7 @@ description: Learn how to use OIDC providers for auhentication in OrcaCD
 
 OrcaCD supports OIDC authentication, allowing users to log in using their existing accounts from various OIDC providers. This guide will walk you through the process of setting up OIDC authentication in OrcaCD.
 
-<Callout title="Disable password login" type="warn">
+<Callout title="Disable password login" type="info">
 	When using OIDC authentication, you can disable password login to enhance security. This ensures
 	that users can only log in using their OIDC provider accounts, reducing the risk of unauthorized
 	access through weak or compromised passwords. Before disabling password login, make sure the OIDC
@@ -15,11 +15,11 @@ OrcaCD supports OIDC authentication, allowing users to log in using their existi
 
 </Callout>
 
-## Example (Pocket Id)
+## Example (Pocket ID)
 
-To set up OIDC authentication with Pocket Id, follow these steps:
+To set up OIDC authentication with Pocket ID, follow these steps:
 
-### 1. Create a Pocket Id Application
+### 1. Create a Pocket ID Application
 
 Go to your Pocket ID dashboard and create a new application. Give it a name and leave the redirect URI blank for now.
 
@@ -31,10 +31,10 @@ You can find the OrcaCD logo [here](https://github.com/OrcaCD/orca-cd/tree/main/
 
 1. Go to the OrcaCD Admin settings and navigate to the OIDC configuration section.
 2. Create a new OIDC provider configuration with the following details:
-   - **Name**: A name for your OIDC provider (e.g., "Pocket Id").
-   - **Issuer URL**: The issuer URL provided by Pocket Id (e.g., `https://pocketid.com`).
-   - **Client ID**: The client ID from your Pocket Id application.
-   - **Client Secret**: The client secret from your Pocket Id application.
+   - **Name**: A name for your OIDC provider (e.g., "Pocket ID").
+   - **Issuer URL**: The issuer URL provided by Pocket ID (e.g., `https://example.com`).
+   - **Client ID**: The client ID from your Pocket ID application.
+   - **Client Secret**: The client secret from your Pocket ID application.
 3. Save the configuration and ensure it is enabled.
 
 ![OrcaCD OIDC Configuration](/assets/docs/orca-sso-registration.png?url)
@@ -42,8 +42,8 @@ You can find the OrcaCD logo [here](https://github.com/OrcaCD/orca-cd/tree/main/
 ### 3. Test the Configuration
 
 1. Log out of OrcaCD if you are currently logged in.
-2. Click on the "Login with Pocket Id" button on the login page.
+2. Click on the "Login with Pocket ID" button on the login page.
 3. You will be redirected to the Pocket Id login page. Enter your credentials and log in.
-4. After successful authentication, you will be redirected back to OrcaCD and logged in with your Pocket Id account.
+4. After successful authentication, you will be redirected back to OrcaCD and logged in with your Pocket ID account.
 
 <div className="w-xl mx-auto">![OrcaCD Login Page](/assets/docs/sso-login-screen.png?url)</div>

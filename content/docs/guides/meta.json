@@ -1,0 +1,3 @@
+{
+	"pages": ["reverse-proxy", "oidc", "github-actions"]
+}

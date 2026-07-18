@@ -3,6 +3,14 @@ title: Reverse Proxy
 description: Learn how to use a reverse proxy with OrcaCD
 ---
 
+In a production environment, it is strongly recommended to run the OrcaCD Hub behind a reverse proxy with a domain and a valid TLS certificate.
+
+<Callout title="Adjust configuration" type="warn">
+	Make sure to adjust the `TRUSTED_PROXIES` environment variable to include the IP address of your
+	reverse proxy, otherwise the Hub will not be able to determine the correct client IP address. You
+	will also need to set the public URL in the hub and agent environment variables.
+</Callout>
+
 ## Nginx
 
 To use Nginx as a reverse proxy for OrcaCD, expose the Hub on localhost only and forward traffic from your public domain to the Hub port.
@@ -35,12 +43,6 @@ server {
 }
 ```
 
-Now when registering an agent, you can use following URL as the Hub URL:
-
-```
-HUB_URL=http://orcacd.example.com
-```
-
 ## Caddy
 
 To use Caddy as a reverse proxy for OrcaCD, add the following to your `Caddyfile`:
@@ -49,12 +51,6 @@ To use Caddy as a reverse proxy for OrcaCD, add the following to your `Caddyfile
 orcacd.example.com {
   reverse_proxy 127.0.0.1:8080
 }
-```
-
-Now when registering an agent, you can use following URL as the Hub URL:
-
-```
-HUB_URL=https://orcacd.example.com
 ```
 
 ## Traefik
@@ -75,10 +71,4 @@ services:
       - "traefik.http.routers.orcacd.rule=Host(`orcacd.example.com`)" // [!code ++]
     volumes:
       - ./data/hub:/app/data
-```
-
-Now when registering an agent, you can use following URL as the Hub URL:
-
-```
-HUB_URL=http://orcacd.example.com
 ```

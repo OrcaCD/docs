@@ -18,6 +18,7 @@ import { baseOptions } from "@/lib/layout.shared";
 import { getPageMarkdownUrl, source } from "@/lib/source";
 import { Suspense } from "react";
 import { AccountRecoveryTerminal } from "@/components/account-recovery-terminal";
+import { Badge } from "@/components/badge";
 import { ImageZoom } from "fumadocs-ui/components/image-zoom";
 
 export const Route = createFileRoute("/docs/$")({
@@ -80,6 +81,7 @@ const clientLoader = browserCollections.docs.createClientLoader({
 						components={{
 							...defaultMdxComponents,
 							AccountRecoveryTerminal,
+							Badge,
 							img: (props) => <ImageZoom {...(props as any)} />,
 						}}
 					/>

@@ -10,16 +10,16 @@ description: Get OrcaCD running quickly with Docker
 
 ## Prerequisites
 
-OrcaCD consists of two components: the **Hub**, the central control plane that serves the web UI and manages your deployments, and the **Agent**, which runs on every machine where applications should be deployed and executes the deployments there. One Hub can manage many Agents on different machines, but both can also run together on a single machine — which is what this quickstart sets up. See the [architecture overview](../architecture/overview) for more details.
+OrcaCD consists of two components: the **Hub**, the central control plane that serves the web UI and manages your deployments, and the **Agent**, which runs on every machine where applications should be deployed and executes the deployments there. One Hub can manage many Agents on different machines, but both can also run together on a single machine, which is what this quickstart sets up. See the [architecture overview](../advanced/architecture/overview) for more details.
 
 Before you start, make sure you have:
 
-- A machine to run the Hub and Agent on — typically a Linux server like a VPS, but any machine with Docker works for testing.
+- A machine to run the Hub and Agent on - typically a Linux server like a VPS, but any machine with Docker works
 - [Docker Engine](https://docs.docker.com/engine/install/) with the [Docker Compose plugin](https://docs.docker.com/compose/install/) installed.
-- For a publicly reachable setup: a domain with a DNS record pointing to your server, and a reverse proxy for HTTPS. OrcaCD does not bind ports 80/443 or terminate TLS itself — the Hub listens on port `8080` (bound to localhost in the provided compose file), and you put your own reverse proxy (Nginx, Caddy, Traefik, ...) in front of it. See the [reverse proxy guide](../guides/reverse-proxy).
+- For a publicly reachable setup: a domain with a DNS record pointing to your server, and a reverse proxy which also handles TLS. By default the Hub only listens on `127.0.0.1:8080`, and you put your own reverse proxy (Nginx, Caddy, Traefik, ...) in front of it. See the [reverse proxy guide](../guides/reverse-proxy).
 
 <Callout>
-	Just trying OrcaCD out? You don't need a domain or reverse proxy: run everything locally, set
+	Just testing OrcaCD locally? You can skip the domain and reverse proxy setup, set the
 	`APP_URL=http://localhost:8080` in the `.env` file, and access the Hub at `http://localhost:8080`.
 </Callout>
 
@@ -39,12 +39,12 @@ wget -O .env https://raw.githubusercontent.com/OrcaCD/orca-cd/main/.env.example
 
 Edit the `.env` file according to the instructions in the file. The most important values are:
 
-- `APP_URL` — the URL under which the Hub will be reachable. OrcaCD does not provision this URL for you: it is your domain pointing at your reverse proxy (e.g. `https://orcacd.example.com`), or `http://localhost:8080` for a local setup.
-- `APP_SECRET` — used for authentication and database encryption. Generate one with `openssl rand -base64 42`.
-- `HUB_URL` — the URL the Agent uses to reach the Hub, usually the same as `APP_URL`.
-- `AUTH_TOKEN` — leave empty for now; you will create it in the Hub UI in a later step.
+- `APP_URL` - the URL under which the Hub will be reachable. OrcaCD does not provision this URL for you: it is your domain pointing at your reverse proxy (e.g. `https://orcacd.example.com`).
+- `APP_SECRET` - used for authentication and database encryption. Generate one with `openssl rand -base64 42`.
+- `HUB_URL` - the URL the Agent uses to reach the Hub, usually the same as `APP_URL`.
+- `AUTH_TOKEN` - leave empty for now; you will create it in the Hub UI in a later step.
 
-You can also customize other environment variables as needed.
+We recommend customizing other environment variables as needed.
 See the [environment variables page](../configuration/env-variables) for more details.
 
 <Callout>
@@ -60,14 +60,11 @@ docker compose up -d
 
 ## Configure your Reverse Proxy [step]
 
-The Hub only listens on port `8080` on localhost. To make it reachable under your domain with HTTPS, configure a reverse proxy that forwards traffic to it.
-See the [reverse proxy guide](../guides/reverse-proxy) for instructions for Nginx, Caddy and Traefik.
-
-<Callout>You can skip this step if you are running OrcaCD locally without a domain.</Callout>
+By default the hub only listens on port `8080` on localhost. Configure your reverse proxy to forward traffic from your domain to the Hub. See the [reverse proxy guide](../guides/reverse-proxy) for instructions for Nginx, Caddy and Traefik.
 
 ## Create an Admin Account [step]
 
-Open the Hub in your browser at the `APP_URL` you configured (e.g. `https://orcacd.example.com/login` or `http://localhost:8080/login`) and create an admin account.
+Open the Hub in your browser at the `APP_URL` you configured (e.g. `https://orcacd.example.com/login`) and create an admin account.
 
 ![Setup Admin Account](/assets/docs/account-setup.png?url)
 
@@ -79,4 +76,4 @@ Navigate to the Agents page and click "Add Agent". Follow the instructions and c
 
 ## Start Deploying [step]
 
-Add your first repository and create your first deployment.
+Add your first repository and create your first deployment. Connect a [OIDC provider](../guides/oidc) to allow your team to log in or invite them on the admin page.

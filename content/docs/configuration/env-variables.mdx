@@ -6,35 +6,42 @@ description: Complete reference for all OrcaCD configuration options
 Below are all the environment variables supported by OrcaCD. These should be configured in your `.env` file.
 Be cautious when modifying environment variables that are not recommended to change.
 
+Each variable is tagged with a **Type**:
+
+- <Badge variant="red">Required</Badge> - OrcaCD will not function correctly without this being set.
+- <Badge variant="amber">Recommended</Badge> - optional, but recommended to change
+- <Badge variant="purple">Security</Badge> - optional, but recommended to harden your deployment.
+- <Badge variant="gray">Optional</Badge> - safe to leave at the default value.
+
 ## General
 
 These environment variables can be used in both the agent and the hub.
 
-| Variable    | Default Value | Recommended to change | Description                                                |
-| ----------- | ------------- | --------------------- | ---------------------------------------------------------- |
-| `LOG_LEVEL` | `info `       | no                    | Log level. Options: trace, debug, info, warn, error, fatal |
-| `LOG_JSON`  | `false`       | no                    | Enable JSON formatted logs.                                |
+| Variable    | Default Value | Type                                   | Description                                                |
+| ----------- | ------------- | -------------------------------------- | ---------------------------------------------------------- |
+| `LOG_LEVEL` | `info `       | <Badge variant="gray">Optional</Badge> | Log level. Options: trace, debug, info, warn, error, fatal |
+| `LOG_JSON`  | `false`       | <Badge variant="gray">Optional</Badge> | Enable JSON formatted logs.                                |
 
 ## Hub
 
-| Variable               | Default Value | Recommended to change | Description                                                                                                                                                             |
-| ---------------------- | ------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `APP_URL`              | `-`           | yes (required)        | The URL of the OrcaCD instance                                                                                                                                          |
-| `APP_SECRET`           | `-`           | yes (required)        | Secret used for authentication and encryption. Generate one with `openssl rand -base64 42`                                                                              |
-| `HOST`                 | `0.0.0.0`     | no                    | Host address                                                                                                                                                            |
-| `PORT`                 | `8080`        | no                    | Container port                                                                                                                                                          |
-| `DISABLE_LOCAL_AUTH`   | `false`       | no                    | Disable password authentication. Useful when using SSO with OIDC                                                                                                        |
-| `TRUSTED_PROXIES`      | `-`           | no                    | Recommended if using a reverse proxy. Comma seperated list of network origins                                                                                           |
-| `ALLOWED_IPS`          | `-`           | no                    | Harden the hub by only allowing requests from certain IPs. Comma seperated list of CIDR ranges or single IPs. This does not apply to webhooks or the agent connections. |
-| `DISABLE_UI`           | `false`       | no                    | Disable serving the frontend. Useful when using the hub only for API access.                                                                                            |
-| `ALLOWED_INTERNAL_IPS` | `-`           | no                    | Private IPs that should be ignored by the SSRF protection. Comma seperated list of CIDR ranges or single IPs                                                            |
-| `DEMO`                 | `false`       | no                    | This mode disables all functions except the login and additionally seeds some demo data in the database                                                                 |
+| Variable               | Default Value | Type                                       | Description                                                                                                                                                             |
+| ---------------------- | ------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `APP_URL`              | `-`           | <Badge variant="red">Required</Badge>      | The URL of the OrcaCD instance                                                                                                                                          |
+| `APP_SECRET`           | `-`           | <Badge variant="red">Required</Badge>      | Secret used for authentication and encryption. Generate one with `openssl rand -base64 42`                                                                              |
+| `TRUSTED_PROXIES`      | `-`           | <Badge variant="amber">Recommended</Badge> | Recommended if using a reverse proxy. Comma seperated list of network origins                                                                                           |
+| `DISABLE_LOCAL_AUTH`   | `false`       | <Badge variant="purple">Security</Badge>   | Disable password authentication. Useful when using SSO with OIDC                                                                                                        |
+| `ALLOWED_IPS`          | `-`           | <Badge variant="purple">Security</Badge>   | Harden the hub by only allowing requests from certain IPs. Comma seperated list of CIDR ranges or single IPs. This does not apply to webhooks or the agent connections. |
+| `HOST`                 | `0.0.0.0`     | <Badge variant="gray">Optional</Badge>     | Host address                                                                                                                                                            |
+| `PORT`                 | `8080`        | <Badge variant="gray">Optional</Badge>     | Container port                                                                                                                                                          |
+| `DISABLE_UI`           | `false`       | <Badge variant="gray">Optional</Badge>     | Disable serving the frontend. Useful when using the hub only for API access.                                                                                            |
+| `ALLOWED_INTERNAL_IPS` | `-`           | <Badge variant="gray">Optional</Badge>     | Private IPs that should be ignored by the SSRF protection. Comma seperated list of CIDR ranges or single IPs                                                            |
+| `DEMO`                 | `false`       | <Badge variant="gray">Optional</Badge>     | This mode disables all functions except the login and additionally seeds some demo data in the database                                                                 |
 
 ## Agent
 
-| Variable                              | Default Value | Recommended to change | Description                                                                                                            |
-| ------------------------------------- | ------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `HUB_URL`                             | `-`           | yes (required)        | The URL of the Hub. Example: `https://example.com`                                                                     |
-| `AUTH_TOKEN`                          | `- `          | yes (required)        | The authentication token of the agent. Register an agent in the hub frontend to retrieve it                            |
-| `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR` | `false`       | no                    | Restrict the volumes that can be mounted to locations within the OrcaCD deployments directory. This enhances security. |
-| `ALLOWED_PRIVILEGED_APPS`             | `-`           | no                    | Comma seperated list of app id that are allowed to bypass certain restrictions enforced by OrcaCD                      |
+| Variable                              | Default Value | Type                                     | Description                                                                                                            |
+| ------------------------------------- | ------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `HUB_URL`                             | `-`           | <Badge variant="red">Required</Badge>    | The URL of the Hub. Example: `https://example.com`                                                                     |
+| `AUTH_TOKEN`                          | `- `          | <Badge variant="red">Required</Badge>    | The authentication token of the agent. Register an agent in the hub frontend to retrieve it                            |
+| `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR` | `false`       | <Badge variant="purple">Security</Badge> | Restrict the volumes that can be mounted to locations within the OrcaCD deployments directory. This enhances security. |
+| `ALLOWED_PRIVILEGED_APPS`             | `-`           | <Badge variant="gray">Optional</Badge>   | Comma seperated list of app id that are allowed to bypass certain restrictions enforced by OrcaCD                      |

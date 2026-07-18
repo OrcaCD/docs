@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: Welcome to OrcaCD - A simple service for using gitops with docker
+description: Welcome to OrcaCD - Simple GitOps for Docker
 ---
 
 <Callout title="Project state" type="warn">
@@ -8,16 +8,31 @@ description: Welcome to OrcaCD - A simple service for using gitops with docker
 	breaking changes at any time.
 </Callout>
 
-OrcaCD is a simple GitOps tool for Docker.
+OrcaCD is a simple GitOps tool for Docker that allows you to deploy your applications using Git as the source of truth.
+With OrcaCD, you can easily manage your Docker containers and keep them in sync with your Git repository.
 
-It allows you to deploy your applications with Docker using Git as the source of truth. With OrcaCD, you can easily manage your Docker containers and keep them in sync with your Git repository.
+## Why OrcaCD?
 
-This project **initially** started as a course project for the master's degree in computer science - intelligent systems at the [Westphalian University of Applied Sciences](https://www.w-hs.de/).
-The goal of this course was to go through the typical phases of a software project like system design, implementation, testing, and documentation. Even though the project was initially created for educational purposes, we decided to make it open source and continue development after the course ended. We believe that OrcaCD can be a useful tool for many developers and we want to share it with the community.
+Tools like [ArgoCD](https://argo-cd.readthedocs.io/en/stable/) brought GitOps to Kubernetes, but not every deployment needs a cluster. Many teams run Docker Compose on one or a few VPS instances and don't want the operational overhead of Kubernetes just to get automated, Git-driven deployments. OrcaCD fills that gap with a lightweight GitOps tool built specifically for Docker Compose.
 
-The motivation for this project is based on a prior project for another course where we used [ArgoCD](https://argo-cd.readthedocs.io/en/stable/) for GitOps deployments on Kubernetes. While ArgoCD is a powerful tool, it only supports Kubernetes and is not suitable for everyone. Since most of us already have a VPS with Docker running, we wanted to create a simple GitOps tool that can be used with Docker without the need for Kubernetes.
+## Features
 
-The structure, architecture and concepts of OrcaCD can be found in the [architecture documentation](/docs/architecture/overview).
+- **Push to deploy** - commit to your Git repository and OrcaCD takes care of the rest. No manual SSH sessions, no forgotten deployment steps.
+- **One dashboard, every server** - manage deployments across all your servers and environments from a single place, whether that's one VPS or a dozen.
+- **Works with what you already have** - built directly on Docker Compose, so there's nothing new to learn and nothing to migrate.
+- **Always up to date** - new image versions are picked up and rolled out automatically, no manual redeploys required.
+- **No secrets in your CI pipeline** - connect GitHub Actions securely without storing long-lived credentials.
+- **Stay in the loop** - get notified the moment a deployment succeeds or fails, wherever your team already talks.
+- **Secure by default** - encrypted communication and data at rest, single sign-on, and IP allowlisting keep your deployments locked down.
+
+## Origin Story
+
+OrcaCD **initially** started as a course project for the master's degree in computer science at the [Westphalian University of Applied Sciences](https://www.w-hs.de/).
+Having already gathered professional work experience as software engineers, we approached the course like a real-world project, going through the typical phases of a software project: system design, implementation, testing, and documentation. Even though it began for educational purposes, we decided to make it open source and continue development after the course ended, since we believe OrcaCD can be a useful tool for many developers.
+
+The structure, architecture and concepts of OrcaCD can be found in the [architecture documentation](/docs/advanced/architecture/overview).
+
+## Screenshots
 
 ![Applications Page](/assets/docs/applications-page.png?url)
 
@@ -35,10 +50,6 @@ import { HomeIcon } from "lucide-react";
 		Learn more the configuration options.
 	</Card>
 </Cards>
-
-## Get to know OrcaCD
-
-[Try the OrcaCD Demo](/docs/demo)
 
 ## Useful Links
 

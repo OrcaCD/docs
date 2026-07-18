@@ -3,20 +3,22 @@ title: CLI Reference
 description: Hub command-line interface for backup, restore, and key management
 ---
 
+## Hub
+
 The Hub binary includes a CLI for administrative tasks that cannot be performed through the web UI. Run any command with `--help` to see all available options.
 
-When using Docker, prefix commands with `docker compose exec hub /app/hub`:
+When using Docker, prefix commands with:
 
 ```bash
 docker compose exec hub /app/hub <command>
 ```
 
 <Callout>
-	Most commands do not require an interactive terminal. For commands that require confirmation the
-	`--yes`/`-y` can be used
+	Most commands do not require an interactive terminal. For commands that require confirmation
+	`--yes`/`-y` can be used as CLI flag to confirm dangerous operations.
 </Callout>
 
-## export
+### export
 
 Creates a consistent backup of the Hub database. The export uses SQLite's `VACUUM INTO` and is safe to run while the Hub is running.
 
@@ -28,7 +30,7 @@ hub export [--output <path>]
 | ---------------- | ------------------------------- | ------------------------------- |
 | `-o`, `--output` | `hub-export-YYYYMMDD-HHMMSS.db` | Output path for the backup file |
 
-**With Docker:**
+**Usage with Docker:**
 
 ```bash
 docker compose exec hub /app/hub export
@@ -40,7 +42,7 @@ The file is created inside the container under `/app/data/`. Copy it out of the 
 docker compose cp hub:/app/data/hub-export-*.db ./backups/
 ```
 
-## import
+### import
 
 Restores a database from a backup file. The existing database is copied to a rollback file before the restore, so you can recover if something goes wrong.
 
@@ -58,7 +60,7 @@ hub import <file> [--yes]
 | `<file>`        | Path to the backup `.db` file |
 | `-y`, `--yes`   | Skip the confirmation prompt  |
 
-**With Docker:**
+**Usage with Docker:**
 
 ```bash
 # Copy the backup into the container
@@ -74,7 +76,7 @@ docker compose run --rm hub /app/hub import data/hub-export-20240101-120000.db
 docker compose up -d hub
 ```
 
-## key rotate
+### key rotate
 
 Re-encrypts all sensitive database fields with a new `APP_SECRET`. Use this when you need to rotate your encryption key.
 
@@ -92,7 +94,7 @@ hub key rotate [--old-secret <secret>] [--yes]
 | `--old-secret` | Previous `APP_SECRET` value. Can also be set via the `OLD_APP_SECRET` env var |
 | `-y`, `--yes`  | Skip the confirmation prompt                                                  |
 
-**With Docker:**
+**Usage with Docker:**
 
 ```bash
 # 1. Create a backup
@@ -110,12 +112,16 @@ docker compose run --rm \
 docker compose up -d hub
 ```
 
-After a successful rotation, all agent tokens and user sessions signed with the old secret are invalidated. Users need to log in again and agents need their tokens re-issued (or simply reconnect. The agent will re-authenticate automatically if the hub is reachable).
+After a successful rotation, all agent tokens and user sessions signed with the old secret are invalidated. Users need to log in again and agents need their tokens re-issued).
 
-## reset-password
+### reset-password
 
 Resets a user's password and forces them to change it on the next login. See [Account Recovery](/docs/troubleshooting/account-recovery) for full details.
 
 ```bash
 hub reset-password <user-id-or-email>
 ```
+
+## Agent
+
+The Agent CLI does not currently provide any helpful commands for end users.

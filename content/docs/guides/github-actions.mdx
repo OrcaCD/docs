@@ -8,17 +8,7 @@ OrcaCD supports triggering deployments directly from GitHub Actions using [GitHu
 ## Prerequisites
 
 - A GitHub repository connected in OrcaCD with provider type **GitHub**
-- **GitHub Actions OIDC** enabled on that repository in OrcaCD (Repository Settings → enable the toggle)
-- The OrcaCD Hub must be reachable from GitHub's network
-
-## How It Works
-
-When a GitHub Actions workflow runs, it requests a short-lived OIDC token from GitHub. OrcaCD verifies this token against GitHub's public OIDC endpoint and checks that:
-
-1. The token's repository claim matches a GitHub repository registered in OrcaCD with GitHub Actions OIDC enabled.
-2. The workflow was **not** triggered by a `pull_request` or `pull_request_target` event (to prevent untrusted forks from triggering deployments).
-
-If verification succeeds, OrcaCD finds all applications linked to the matching repository and branch, then dispatches the requested actions.
+- The OrcaCD Hub must be reachable from GitHub's network.
 
 ## Example Workflow
 
@@ -28,9 +18,9 @@ Add a step at the end of your CI workflow to notify OrcaCD after a successful bu
 permissions:
   id-token: write
 
-- uses: OrcaCD/deploy-action@...
+- uses: OrcaCD/deploy-action@8c0fc6e44d0c03fa097ad2019cdc7cefc8a54b90 # v0.1.1
   with:
-    # The OrcaCD hub URL (e.g., https://orca.example.com)
+    # The OrcaCD hub URL (required)
     # Required
     hub: https://orca.example.com
 
@@ -38,12 +28,22 @@ permissions:
     # Optional, default: true
     syncRepo: true
 
-    # Whether to pull the latest container image versions
+    # Whether to pull the latest container image versions,
+    # even it the compose file has not changed
     # Optional, default: false
     pullImages: false
 ```
 
-## Branch and Tag Support
+## Use Cases
 
-- **Branch pushes**: OrcaCD deploys all applications linked to the pushed branch.
-- **Tag pushes**: OrcaCD resolves which branches the tagged commit belongs to and deploys all applications linked to those branches.
+- Trigger on tag creation to deploy a new version of your application when a new release is created
+- To deploy a new version of a mutable image (e.g. `latest`) after a successful build and push to the registry
+
+## How It Works
+
+When a GitHub Actions workflow runs, it requests a short-lived OIDC token from GitHub. OrcaCD verifies this token against GitHub's public OIDC endpoint and checks that:
+
+1. The token's repository claim matches a GitHub repository registered in OrcaCD with GitHub Actions OIDC enabled.
+2. The workflow was **not** triggered by a `pull_request` or `pull_request_target` event (to prevent untrusted forks from triggering deployments).
+
+If verification succeeds, OrcaCD finds all applications linked to the matching repository and branch, then dispatches the requested actions.

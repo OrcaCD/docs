@@ -1,9 +1,9 @@
 ---
 title: Documentation
-description: Contribute to improving the OrcaCD website or documentation
+description: Contribute to the OrcaCD website or documentation
 ---
 
-This guide explains how to add or edit documentation (Fumadocs).
+This guide explains how to add or edit the OrcaCD documentation. The source code of the documentation is stored in the [OracaCD/docs GitHub repository](https://github.com/OrcaCD/docs).
 
 ## 1. Where docs live
 
@@ -12,10 +12,8 @@ All markdown pages are under `/content/docs`. The file `meta.json` controls the 
 ## 2. Adding a new page
 
 1. Pick the correct folder that matches a collection pattern (e.g. `/guides`).
-
 2. Create `/content/docs/<section>/<slug>.md`.
-
-3. Add frontmatter:
+3. Add the frontmatter code:
 
 ```yaml lineNumbers
 ---
@@ -33,6 +31,6 @@ description: Get OrcaCD running quickly with Docker installation
 
 ## 3. Submitting changes
 
-After making changes you can create a pull request to the `main` branch. Please make sure to commit using Conventional Commits (`doc: update guides`).
+After making changes you can create a pull request to the `main` branch. Please make sure to commit using Conventional Commits (`docs: update guides`).
 
 Thanks for helping out!

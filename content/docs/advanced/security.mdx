@@ -3,12 +3,12 @@ title: Security
 description: Secure your OrcaCD deployment
 ---
 
-OrcaCD is designed to be safe by default, but of course, there are always additional steps you can take to further secure your deployment. Here are some best practices to consider:
+OrcaCD is designed to be safe by default, but of course, there are always additional steps you can take to further secure your OrcaCD installation. Here are some best practices to consider:
 
-## Harden your Deployment
+## Harden OrcaCD
 
 - Disable password authentication for the Hub and use a secure OIDC provider instead, that enforces strong authentication methods, including secure multi-factor authentication (MFA).
-- Always run the hub behind a secure reverse proxy and ensure that all communicationis encrypted using TLS.
+- Always run the hub behind a secure reverse proxy and ensure that all communication is encrypted using TLS.
 - Make sure to configure the `TRUSTED_PROXIES` environment variable correctly to prevent IP spoofing attacks.
 - Restrict the IPs that can access the hub by configuring the `ALLOWED_IPS` environment variable. This will prevent unauthorized access to the hub and does not apply to webhooks or the agent connections.
 - Restrict the volumes that can be mounted to locations within the OrcaCD deployments directory by setting the `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR` environment variable to `true`. This will prevent malicious applications from accessing sensitive files on the host system.

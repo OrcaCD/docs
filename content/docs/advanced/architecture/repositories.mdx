@@ -54,23 +54,6 @@ Use polling when:
 
 OrcaCD listens for push events from your Git provider via webhook. This is more efficient than polling and reacts to new commits instantly.
 
-#### Setting Up a Webhook
-
-1. Add the repository with sync type **Webhook**.
-2. After saving, open the repository settings. A webhook URL and secret should be generated.
-3. Register this webhook in your Git provider:
-
-   **GitHub:** Settings → Webhooks → Add webhook
-   - Payload URL: `https://your-hub-url/api/v1/webhooks/repositories/<id>`
-   - Content type: `application/json`
-   - Secret: copy from OrcaCD
-   - Events: **Just the push event**
-
-   **GitLab:** Settings → Webhooks
-   - URL: `https://your-hub-url/api/v1/webhooks/repositories/<id>`
-   - Secret token: copy from OrcaCD
-   - Trigger: **Push events**
-
 ### Manual
 
 The repository is only synced when you explicitly trigger a sync from the UI or API.

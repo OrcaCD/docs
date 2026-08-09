@@ -36,7 +36,7 @@ export default defineConfig({
 		port: 3000,
 	},
 	plugins: [
-		mdx(await import("./source.config")),
+		mdx(await import("./source.config.ts")),
 		tailwindcss(),
 		tanstackStart({
 			spa: {

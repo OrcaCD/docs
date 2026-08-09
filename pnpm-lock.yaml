@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@orama/orama':
-        specifier: ^3.1.18
-        version: 3.1.18
       '@tanstack/react-router':
         specifier: 1.170.20
         version: 1.170.20(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -59,6 +56,9 @@ importers:
       vite:
         specifier: ^8.2.0
         version: 8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
+      zbsearch:
+        specifier: ^3.3.4
+        version: 3.3.4
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.3.3
@@ -390,10 +390,6 @@ packages:
   '@oozcitak/util@10.0.0':
     resolution: {integrity: sha512-hAX0pT/73190NLqBPPWSdBVGtbY6VOhWYK3qqHqtXQ1gK7kS2yz4+ivsN07hpJ6I3aeMtKP6J6npsEKOAzuTLA==}
     engines: {node: '>=20.0'}
-
-  '@orama/orama@3.1.18':
-    resolution: {integrity: sha512-a61ljmRVVyG5MC/698C8/FfFDw5a8LOIvyOLW5fztgUXqUpc1jOfQzOitSCbge657OgXXThmY3Tk8fpiDb4UcA==}
-    engines: {node: '>= 20.0.0'}
 
   '@oxc-project/types@0.143.0':
     resolution: {integrity: sha512-u6JZdLBTLotrNC9Vd6vPssINdzcCzleKAH6EJKImQb7GtYvX5keN2dxkoK44stCc4tffE6QQRtZTXVSzsLUlWA==}
@@ -3208,8 +3204,6 @@ snapshots:
       '@oozcitak/util': 10.0.0
 
   '@oozcitak/util@10.0.0': {}
-
-  '@orama/orama@3.1.18': {}
 
   '@oxc-project/types@0.143.0': {}
 

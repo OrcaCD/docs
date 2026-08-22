@@ -15,6 +15,10 @@ export const Route = createRootRoute({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
+				name: "title",
+				content: "OrcaCD",
+			},
+			{
 				name: "description",
 				content: "GitOps for Docker",
 			},

@@ -94,6 +94,7 @@ export function useFallbackData<JSON = any>(key: string, ttlMs = DEFAULT_CACHE_T
 	};
 
 	useEffect(() => {
+		// oxlint-disable-next-line react/set-state-in-effect
 		setFallbackData(readFallbackData<JSON>(key));
 
 		const handleStorageChange = (event: StorageEvent) => {

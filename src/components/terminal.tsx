@@ -78,6 +78,7 @@ export const TypingAnimation = ({
 	}, [children, duration, started]);
 
 	return (
+		// oxlint-disable-next-line react/static-components
 		<MotionComponent
 			className={cn("text-sm font-normal tracking-tight", className)}
 			ref={elementRef}

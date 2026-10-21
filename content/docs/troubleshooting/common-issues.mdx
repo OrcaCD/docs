@@ -13,6 +13,9 @@ description: Solutions to frequently encountered problems
 2. Confirm the `AUTH_TOKEN` matches the token generated for that Agent in the Hub UI.
 3. Check Agent logs: `docker compose logs agent` and look for connection errors.
 4. If the Hub is behind a reverse proxy, make sure WebSocket upgrades are forwarded correctly. See the [Reverse Proxy guide](/docs/guides/reverse-proxy).
+5. If the logs show `token is missing signing-key segment`, the token was created before v0.4.0. Rotate the token in the Hub UI and update `AUTH_TOKEN`. See [Upgrading](/docs/setup/upgrading).
+6. If the Hub uses a self-signed certificate or a certificate from a private CA, mount the CA certificate into the Agent container and set `CA_CERT_FILE` to its path.
+7. After changing the `.env` file, recreate the container with `docker compose up -d agent`. A plain restart does not reload the `.env` file.
 
 ## Hub is not accessible / returns 502
 
@@ -31,7 +34,7 @@ description: Solutions to frequently encountered problems
 
 1. Verify the Agent is online.
 2. Check Agent logs for errors during the Docker Compose up/pull step.
-3. Ensure the Agent has access to the Docker socket (`/var/run/docker.sock`).
+3. Ensure the Agent has access to the Docker API (`use_api_socket: true` in the default `docker-compose.yml`).
 4. If the Compose file references private images, confirm the Agent host has credentials to pull them (e.g., `docker login` was run on that host).
 
 ## Repository sync fails with authentication error
@@ -42,7 +45,7 @@ description: Solutions to frequently encountered problems
 
 1. Confirm the auth token is still valid and has not expired or been revoked.
 2. For token auth, verify the token has `read_repository` (GitLab) or `Contents: read` (GitHub) permissions.
-3. Use the **Test Connection** button in the repository settings to check credentials without triggering a full sync.
+3. Update the token in the repository settings under **Authentication**. OrcaCD tests the connection before saving and shows an error if the credentials are invalid.
 
 ## Webhook sync not triggering
 
@@ -50,7 +53,7 @@ description: Solutions to frequently encountered problems
 
 **Checks:**
 
-1. Confirm the webhook URL and secret in your Git provider match what OrcaCD shows in the repository settings.
+1. Confirm the webhook URL and secret in your Git provider match what OrcaCD shows in the repository settings. OrcaCD responds with `401` for unknown repositories, wrong secrets and repositories whose sync type is not **Webhook**. See [Webhooks](/docs/configuration/webhooks#responses-and-rate-limits).
 2. Check that the Hub is publicly reachable on the configured `APP_URL`.
 3. Review the webhook delivery logs in your Git provider (GitHub: Settings → Webhooks → Recent Deliveries) to see if the request reached the Hub.
 4. Verify the webhook is configured to send **push** events.

@@ -4,7 +4,7 @@ export function AccountRecoveryTerminal() {
 	return (
 		<Terminal>
 			<TypingAnimation delay={0} duration={30}>
-				$ docker compose exec hub /app/hub reset-password 019dc111-5220-77bc-9729-2335f88fa658
+				$ docker compose exec hub /app/hub reset-password --email test@orcacd.dev
 			</TypingAnimation>
 			<AnimatedSpan delay={2500} className="text-fd-primary">
 				{`

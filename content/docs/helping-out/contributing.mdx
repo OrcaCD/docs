@@ -21,26 +21,126 @@ For breaking changes or major new features, open an issue beforehand to discuss 
 
 ### Required tools
 
-We use Go and Node.js for the development of the backend and frontend respectively. For a detailed list of required tools and their versions, please refer to the [CONTRIBUTING.md](https://github.com/OrcaCD/orca-cd/blob/main/CONTRIBUTING.md#required-tools) file in the repository.
+The backend (Hub and Agent) is written in Go, the frontend in React with Node.js tooling.
+
+**Backend:**
+
+| Tool                                                             | Version | Purpose                                     |
+| ---------------------------------------------------------------- | ------- | ------------------------------------------- |
+| [Go](https://go.dev/dl/)                                         | 1.27+   | Language runtime                            |
+| C compiler (e.g. `gcc` or `clang`)                               | -       | Required by CGO (SQLite and race detector)  |
+| [just](https://just.systems/man/en/packages.html)                | latest  | Task runner                                 |
+| [buf](https://buf.build/docs/cli/installation/)                  | latest  | Protobuf tooling                            |
+| [protoc-gen-go](https://protobuf.dev/reference/go/go-generated/) | latest  | Go protobuf code generation (used by `buf`) |
+| [golangci-lint](https://golangci-lint.run/welcome/install/)      | v2.14+  | Linting and formatting                      |
+| [gotestsum](https://github.com/gotestyourself/gotestsum#install) | latest  | Cleaner `go test` output                    |
+
+**Frontend and E2E tests:**
+
+| Tool                                       | Version | Purpose                                |
+| ------------------------------------------ | ------- | -------------------------------------- |
+| [Node.js](https://nodejs.org/)             | 26.x    | Runtime                                |
+| [pnpm](https://pnpm.io/)                   | 12.x    | Package manager                        |
+| [Docker](https://docs.docker.com/install/) | latest  | Docker Compose dev setup and E2E tests |
 
 ### Setting up the development environment
 
 1. Install all required tools listed above.
-2. Clone the repository and navigate to the project directory.
-3. For the frontend, navigate to the `frontend/` directory and run `npm ci` to install dependencies.
-4. Run the frontend development server with `node --run dev` from the `frontend/` directory.
-5. Run the backend services with `just run-hub` and `just run-agent` in the `backend/` directory.
-6. Access the app at `http://localhost:3000` and the hub API at `http://localhost:8080`.
+2. Clone the [repository](https://github.com/OrcaCD/orca-cd) and navigate to the project directory.
+3. Install the frontend dependencies:
+
+   ```sh
+   cd frontend
+   pnpm i --frozen-lockfile
+   ```
+
+4. Copy `backend/.env.dev.example` to `backend/.env` and set `APP_SECRET` to a random value with at least 32 characters. The `Justfile` loads this file automatically.
+
+   ```sh
+   cp backend/.env.dev.example backend/.env
+   ```
+
+5. Start the Hub and the frontend development server from the repository root:
+
+   ```sh
+   just dev
+   ```
+
+6. Open the app at `http://localhost:3000`. The Hub API runs on `http://localhost:8080`, and the Vite dev server proxies `/api` requests to it.
+
+To run an Agent locally, [register an agent](/docs/advanced/architecture/agents) in the UI, set `AUTH_TOKEN` in `backend/.env` and start it with `just run-agent` (or use `just dev-all` to start the Hub, Agent and frontend together).
+
+### Just commands
+
+The `Justfile` in the repository root includes all backend commands, so every command below can be run from the root. The backend commands can also be run from the `backend/` directory.
+
+```sh
+just dev            # run the Hub and the frontend dev server
+just dev-all        # run the Hub, the Agent and the frontend dev server
+just run-frontend   # run the frontend dev server on port 3000
+just run-hub        # run the Hub (pass a subcommand, e.g. `just run-hub help`)
+just run-agent      # run the Agent
+just run            # run the Hub and the Agent
+just build          # build the Hub and Agent binaries to backend/bin/
+just proto          # regenerate the Go code from the protobuf definitions
+just lint           # golangci-lint, go mod verify and buf lint
+just fmt            # format Go and protobuf files
+just test           # run all backend tests with race detection
+just test-coverage  # run all tests and open an HTML coverage report
+```
+
+Backend tests need `CGO_ENABLED=1`. The `just` recipes set it for you. If you run `go test` directly, set it yourself:
+
+```sh
+CGO_ENABLED=1 go test -v -race -run TestName ./internal/hub/routes/
+```
+
+### Linting, formatting and type checking
+
+Run these commands from the `frontend/` directory (and from `e2e/` if you changed the E2E tests):
+
+```sh
+node --run lint                 # oxlint
+node --run format               # oxfmt (use format:check to only verify)
+node --run typecheck            # TypeScript type check
+node --run translations:check   # check for unused and missing message keys (frontend only)
+```
+
+For the backend, use `just lint`, `just fmt` and `just test`.
+
+### Translations
+
+The frontend uses Paraglide (inlang) for translations. Messages are stored in `frontend/messages/<locale>.json`, with `en.json` as the source file. When you add a new message key, add it to every locale file. Remove messages you no longer use, because `node --run translations:check` fails on unused messages and on keys that are missing in `en.json`. All other translations are managed on Crowdin, see [Translating](/docs/helping-out/translating).
+
+### End-to-end tests
+
+The E2E tests use [Playwright](https://playwright.dev) and live in the `e2e/` directory. Install the dependencies and browsers first:
+
+```sh
+cd e2e
+pnpm i --frozen-lockfile && pnpm run install:browsers
+```
+
+Then run the tests:
+
+```sh
+pnpm test       # run all tests headless
+pnpm test:ui    # run the tests in the interactive Playwright UI
+```
+
+- Playwright builds the Hub and Agent images and starts the Hub with `docker-compose.e2e.yml` on `http://127.0.0.1:8090`. Set `E2E_SKIP_BUILD=1` to skip the image build if the images are already built.
+- External services are mocked by small Node.js servers in `e2e/mock/`: `gitea` (Git provider), `oidc` (OIDC provider) and `receiver` (notification targets). The `certs` folder contains the self-signed certificate of the Gitea mock, which the Hub is configured to trust.
+- The agent, application and image tests start an Agent container through Docker Compose and run after all other tests. They need access to the Docker socket.
 
 ### Running locally with Docker
 
 A Docker Compose file is provided for running the full stack locally:
 
 ```sh
-docker compose -f docker-compose.dev.yaml up --build
+docker compose -f docker-compose.dev.yml up --build
 ```
 
-The hub service will be available at `http://localhost:8080`.
+The Hub will be available at `http://localhost:8080`. The Agent needs an `AUTH_TOKEN`, so [register an agent](/docs/advanced/architecture/agents) in the UI and set it in `docker-compose.dev.yml`. To test OIDC login, start a local [Pocket ID](https://pocket-id.org) instance on `http://localhost:1411` with `--profile pocket-id`.
 
 ### Submitting a Pull Request
 
@@ -56,11 +156,15 @@ Before you submit the pull request for review please ensure that
   fix: hide global audit log switch for non admin users
   ```
 
-  Where `TYPE` can be:
-  - feat - is a new feature
-  - doc - documentation only changes
+  Where `type` can be:
+  - feat - a new feature
   - fix - a bug fix
-  - refactor - code change that neither fixes a bug nor adds a feature
+  - docs - documentation only changes
+  - refactor - a code change that neither fixes a bug nor adds a feature
+  - test - adding or updating tests
+  - ci - changes to the CI workflows
+  - chore - maintenance such as dependency updates
 
 - Your pull request has a detailed description
 - You have added tests for any new features or bug fixes
+- Linting, formatting, type checks and tests pass

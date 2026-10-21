@@ -5,22 +5,68 @@ description: Creating and managing applications in OrcaCD
 
 An **Application** in OrcaCD represents a Docker Compose deployment. It links a repository (and a specific branch and file path) to an Agent, which runs the actual containers.
 
+## Overview Dashboard
+
+The **Overview** page (`/`, reachable by clicking the OrcaCD logo) shows the state of all your applications at a glance:
+
+| Card                   | Content                                                                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Status**             | Number of applications that are synced and healthy, broken down by status                                                            |
+| **Deployments**        | Successful and failed deployments of the last 7 days and the success rate                                                            |
+| **Agents**             | How many agents are online, when offline agents were last seen and which agents cannot reach Docker                                  |
+| **Needs attention**    | Applications that are unhealthy, stopped, out of sync, failed their last sync or whose agent is offline or in error, with the reason |
+| **Recent deployments** | The latest deployments across all applications                                                                                       |
+| **Repositories**       | Sync state of your repositories                                                                                                      |
+
+If the last sync of an application in **Needs attention** failed and its agent is online, a **Retry** button redeploys it directly from the dashboard.
+
+As long as no application exists, the dashboard is replaced by a **Get started** checklist that guides you through connecting an agent and a repository, creating the first application and optionally setting up [notifications](/docs/advanced/notifications).
+
+![Overview dashboard](/assets/docs/overview-dashboard.png?url)
+
+The **Applications** page lists all applications. You can search them, filter them by status or agent and switch between a grid and a list view.
+
 ## Creating an Application
 
-1. Navigate to the **Applications** page and click **Add Application**.
-2. Fill in the required fields:
+1. Navigate to the **Applications** page and click **New Application**.
+2. The **Add Application** dialog guides you through three steps:
 
-   | Field          | Description                                                                                    |
-   | -------------- | ---------------------------------------------------------------------------------------------- |
-   | **Name**       | Display name for the application                                                               |
-   | **Repository** | The repository containing the Compose file                                                     |
-   | **Branch**     | The branch to track (e.g., `main`, `production`)                                               |
-   | **Path**       | Path to the `docker-compose.yml` inside the repository (e.g., `apps/myapp/docker-compose.yml`) |
-   | **Agent**      | The agent that will execute the deployment                                                     |
+   | Step          | Field                    | Description                                                                                                                              |
+   | ------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+   | Details       | **Name**                 | Display name of the application. Must be unique per agent. The Docker Compose project name is derived from it                            |
+   |               | **Icon**                 | Icon shown in the UI                                                                                                                     |
+   |               | **Agent**                | The agent that will run the deployment                                                                                                   |
+   |               | **Delete old images**    | Remove replaced images after a deployment (see [Delete old images](#delete-old-images))                                                  |
+   | Source        | **Repository**           | The repository containing the Compose file                                                                                               |
+   |               | **Branch**               | The branch to track (e.g., `main`, `production`)                                                                                         |
+   |               | **Compose File**         | Pick the Compose file from the file tree of the branch. The path must end with `.yml` or `.yaml` (e.g., `apps/myapp/docker-compose.yml`) |
+   | Image Polling | **Enable image polling** | Regularly check for new image versions (see [Image Polling](#image-polling))                                                             |
+   |               | **Polling interval**     | How often to check for new images. Minimum 60 seconds, default 120 seconds                                                               |
 
-3. Click **Create**.
+3. Click **Add Application**.
 
-OrcaCD will immediately sync the repository and deploy the Compose file to the selected Agent.
+OrcaCD reads the Compose file from the latest commit of the branch and immediately deploys it to the selected Agent.
+
+## Application Details
+
+Opening an application shows its details page. Next to the name are the [sync and health status](#application-status). If the last deployment or sync failed, the error is shown at the top.
+
+Four info cards summarize the application:
+
+| Card              | Content                                                                                              |
+| ----------------- | ---------------------------------------------------------------------------------------------------- |
+| **Repository**    | Repository, branch, sync type of the repository and, if enabled, image polling and the image webhook |
+| **Latest Commit** | Hash and message of the commit the application is at                                                 |
+| **Target Host**   | The Agent that runs the application                                                                  |
+| **Last Sync**     | When the application was last synced and what triggered it (see below)                               |
+
+The **Last Sync** card shows one of the following triggers: manually, application creation, repository polling, repository webhook, GitHub Actions, image polling or image webhook.
+
+Below the cards, the **Manifest** tab shows the current Compose file with its path. The **Diff** tab compares it with the previous version of the Compose file and shows the number of added and removed lines.
+
+![Application details with the Deploy dropdown](/assets/docs/application-details.png?url)
+
+![Diff of the Compose file](/assets/docs/application-manifest-diff.png?url)
 
 ## Application Status
 
@@ -28,62 +74,106 @@ Each application shows two status indicators:
 
 ### Sync Status
 
-| Status        | Meaning                                              |
-| ------------- | ---------------------------------------------------- |
-| `Synced`      | Deployed commit matches the latest repository commit |
-| `Out Of Sync` | A new commit exists that has not been deployed yet   |
-| `Syncing`     | A deployment is currently in progress                |
-| `Unknown`     | No deployment has been triggered yet                 |
+| Status        | Meaning                                                                                                                          |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `Synced`      | The last deployment, sync or image update succeeded                                                                              |
+| `Out of Sync` | The last deployment, sync or image update failed or was interrupted (e.g. the Agent disconnected or the Hub restarted during it) |
+| `Syncing`     | A deployment or image update is currently in progress                                                                            |
+| `Unknown`     | No deployment has finished yet                                                                                                   |
+
+New commits are not shown as out of sync: as soon as OrcaCD sees a new commit (depending on the [sync strategy](/docs/advanced/architecture/repositories#sync-strategies) of the repository), it deploys it automatically. If an application is `Out of Sync`, check the error on the details page or in the [history](#history) and deploy it again.
 
 ### Health Status
 
-| Status      | Meaning                                              |
-| ----------- | ---------------------------------------------------- |
-| `Healthy`   | All containers from the Compose file are running     |
-| `Unhealthy` | One or more containers are stopped or in a bad state |
-| `Unknown`   | Health has not been checked yet                      |
+The health is reported by the Agent, which watches the Docker events of the application's containers and updates the status in real time.
+
+| Status      | Meaning                                                                                                                         |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `Healthy`   | All containers are running and none of them reports a failing Docker healthcheck                                                |
+| `Unhealthy` | At least one container is not running (e.g. restarting) or reports a failing Docker healthcheck                                 |
+| `Stopped`   | All containers are created, exited or paused, e.g. after `docker compose stop`                                                  |
+| `Unknown`   | No containers exist, a healthcheck is still starting, a deployment is running, the Agent is disconnected or cannot reach Docker |
 
 ## Triggering a Deployment
 
-OrcaCD automatically deploys when the tracked repository branch receives a new commit (depending on the repository sync strategy). You can also trigger a deployment manually:
+OrcaCD automatically deploys when the tracked repository branch receives a new commit that changes the Compose file (depending on the repository sync strategy), and when image polling or the image pull webhook detects a new image. You can also trigger a deployment manually from the details page:
 
-1. Open the application.
-2. Click **Deploy** in the top-right corner.
+| Action              | Description                                                                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Deploy**          | Redeploys the current Compose file without syncing the repository                                                                      |
+| **Sync repository** | Available in the dropdown next to **Deploy**. Fetches the latest commit and deploys the changes to all applications of this repository |
+| **Pull images**     | Available in the dropdown next to **Deploy**. Pulls the latest images and redeploys only if an image changed                           |
 
-This forces an immediate sync and deployment regardless of the current sync status.
+<Callout>
+	The Agent must be online to deploy. If it is offline, the deployment fails immediately and the
+	application is marked `Out of Sync` with an error. Deployments are not queued or retried
+	automatically, so trigger the deployment again once the Agent is back online.
+</Callout>
+
+## History
+
+The **History** page of an application records every deployment, commit sync and image update with its time, trigger, the user who triggered it, the commit, the result (`Running`, `Succeeded`, `Failed` or `No change`) and error details.
+
+You can switch between a table and a timeline view. The search filters the history by type, trigger, result, user, commit hash or message, and error message.
+
+![Application history in the timeline view](/assets/docs/application-history-timeline.png?url)
 
 ## Application Settings
 
-Open an application and navigate to the **Settings** tab to configure it.
+The sidebar of an application contains the pages **Details** and **History** as well as the settings pages **General** and **Image Updates**.
 
 ### General
 
-Change the application name, icon, linked repository, branch, path, or agent.
+The general settings are split into the following cards:
 
-### Image Polling
+| Card            | Settings                                           |
+| --------------- | -------------------------------------------------- |
+| **Application** | Name, icon and the Agent that runs the application |
+| **Source**      | Repository, branch and Compose file                |
+| **Deployment**  | [Delete old images](#delete-old-images)            |
+| **Danger zone** | Delete the application                             |
 
-Image polling lets OrcaCD automatically pull updated Docker images and restart containers, even when no Compose file has changed. This is useful for continuous delivery workflows where a CI pipeline pushes new image tags.
+Saving does not deploy the application. If you change the Compose file, the Agent or the name, a notification with a **Deploy** button appears so you can apply the changes right away.
 
-| Setting                  | Description                                                                  |
-| ------------------------ | ---------------------------------------------------------------------------- |
-| **Enable image polling** | Turns image polling on or off                                                |
-| **Polling interval**     | How often to check for new images (minimum 30 seconds, default 120 seconds)  |
-| **Delete old images**    | When enabled, old images are removed from the host after a successful update |
+![Deploy prompt after saving changes](/assets/docs/deploy-after-edit-toast.png?url)
 
-## Image Pull Webhooks
+When you move the application to another Agent or rename it so that its Compose project name changes, OrcaCD first removes the old containers from the current Agent. Deleting an application also removes its containers and deployment directory from the Agent. Both require the current Agent to be online. Otherwise the request fails with `409 Conflict` and nothing is changed.
 
-Instead of polling, you can trigger an image pull from your container registry via a webhook. This is ideal for registry-side push notifications.
+![General settings of an application](/assets/docs/application-general-settings.png?url)
 
-1. Open the application settings.
+#### Delete old images
+
+When enabled, OrcaCD removes the images an application no longer uses after every successful deployment, image update and manual image pull. Images are removed by ID, so this works both for changed tags and for new digests of the same tag. Images that are still used by other containers are kept.
+
+### Image Updates
+
+![Image update settings](/assets/docs/application-image-updates.png?url)
+
+#### Image Polling
+
+Image polling lets OrcaCD automatically pull updated Docker images and restart containers, even when the Compose file has not changed. This is useful for mutable tags like `latest` or for CI pipelines that push new images under the same tag.
+
+| Setting                  | Description                                                                 |
+| ------------------------ | --------------------------------------------------------------------------- |
+| **Enable image polling** | Turns image polling on or off                                               |
+| **Polling interval**     | How often to check for new images (minimum 60 seconds, default 120 seconds) |
+
+The Agent compares the images of the application with the registry. If any image changed, it pulls the images and redeploys the application.
+
+#### Image Pull Webhook
+
+Instead of polling, your container registry can notify OrcaCD via a webhook when a new image is pushed.
+
+1. Open the **Image Updates** settings of the application.
 2. In the **Image Pull Webhook** section, click **Generate Webhook**.
-3. OrcaCD returns a webhook URL and secret.
-4. Register this webhook in your container registry (e.g., Docker Hub, GitHub Container Registry, Harbor).
+3. Copy the secret. It is only shown once. The webhook URL is shown afterwards in the settings.
+4. Register the webhook in your container registry. See [Webhooks](/docs/configuration/webhooks#container-registries) for the setup of Docker Hub, GitHub Packages, Harbor and generic registries.
 
-When the registry sends a push event to the webhook URL, OrcaCD instructs the Agent to pull the latest image and restart the affected container.
+When a webhook is received, the Agent pulls all images of the application and redeploys it if any image changed. Deliveries for the same application are combined: the pull starts once no further delivery has arrived for 5 seconds, but at the latest 30 seconds after the first one. This way, one push that triggers several webhooks only results in one deployment.
+
+Click **Regenerate** to create a new secret or **Revoke** to disable the webhook. The old secret stops working immediately.
 
 <Callout>
 	The Agent must be online for the image pull webhook to succeed. If the Agent is offline, the event
 	is not queued.
 </Callout>
-
-To revoke a webhook and generate a new one, click **Revoke Webhook** and then **Generate Webhook** again.

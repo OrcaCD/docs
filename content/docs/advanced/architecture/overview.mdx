@@ -11,12 +11,14 @@ This architecture allows for a scalable and flexible deployment system that can 
 ### Hub
 
 The Hub is the central component of OrcaCD that manages the state of the system, processes deployment instructions, and provides an API for the Agents and other clients to interact with the system.
-Additionally, the Hub serves the web UI and provides a REST API for external integrations. It is responsible for processing deployment instructions, managing the state of the system, and providing an interface for the Agents to communicate with.
+Additionally, the Hub serves the web UI and provides a REST API for external integrations.
 
 ### Agent
 
 The Agent is responsible for executing deployments and reporting back to the Hub.
 It runs on the target environment where the applications are deployed and communicates with the Hub to receive deployment instructions and send status updates.
+The Agent watches the Docker events of the deployed containers and continuously reports the health of the applications to the Hub. It also reports its own version, the Docker version and whether it can reach the Docker daemon.
+See [Agents](/docs/advanced/architecture/agents) for details.
 
 ### Communication
 
@@ -31,13 +33,15 @@ OrcaCD follows the GitOps model, where the desired state of the system is define
 
 ### Git Syncing
 
-OrcaCD supports multiple Git syncing strategies, including polling and webhooks, to keep the Hub in sync with the desired state defined in Git.
-This allows for a seamless integration with existing Git workflows and tools.
+OrcaCD supports multiple ways to keep the Hub in sync with the desired state defined in Git: polling, webhooks from the Git provider, manual syncs from the UI or API, and [GitHub Actions](/docs/guides/github-actions).
+This allows for a seamless integration with existing Git workflows and tools. See [Repositories](/docs/advanced/architecture/repositories#sync-strategies) for details.
 
 ## Server-Sent-Events (SSE)
 
-In order to provide real-time updates to the UI and other clients, OrcaCD uses Server-Sent-Events (SSE) to stream events from the Hub to the web ui.
-This allows for a responsive and interactive user experience, as clients can receive updates about the state of deployments, agents, and other system components in real-time without the need for polling.
+In order to provide real-time updates to the UI, OrcaCD uses Server-Sent-Events (SSE) to stream events from the Hub to the web UI.
+The events do not contain any state. Instead, the Hub sends an `update` event with a list of API URLs whose data has changed (e.g. `/api/v1/applications`), and the UI refetches the data it currently displays for these URLs.
+Several changed resources can be combined into a single event.
+This keeps the UI up to date with deployments, agents, and other system components in real-time without the need for polling.
 
 ## Persistence
 

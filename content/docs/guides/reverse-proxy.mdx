@@ -8,9 +8,7 @@ In a production environment, it is strongly recommended to run the OrcaCD Hub be
 <Callout title="Adjust configuration" type="warn">
 	Make sure to adjust the `TRUSTED_PROXIES` environment variable to include the IP address (or CIDR
 	range) of your reverse proxy, otherwise the Hub will not be able to determine the correct client
-	IP address. If the reverse proxy runs on the host and connects to the published port, the Hub
-	usually sees the gateway IP of the Docker network (e.g. `172.18.0.1`) instead of `127.0.0.1`. You
-	will also need to set the public URL in the hub and agent environment variables.
+	IP address. You will also need to set the public URL in the hub and agent environment variables.
 </Callout>
 
 ## Nginx

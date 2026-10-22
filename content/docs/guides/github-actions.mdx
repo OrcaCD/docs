@@ -41,11 +41,6 @@ jobs:
 
 At least one of `syncRepo` or `pullImages` must be set to `true`, otherwise the action fails.
 
-<Callout type="warn">
-	The `hub` input is used as the audience of the OIDC token. It must exactly match the `APP_URL` of
-	the Hub (scheme, host and port, no path), otherwise the Hub rejects the token.
-</Callout>
-
 ## Restricting Access
 
 In the sync settings of the repository you can further restrict what GitHub Actions is allowed to do:

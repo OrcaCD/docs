@@ -7,24 +7,9 @@ An **Application** in OrcaCD represents a Docker Compose deployment. It links a 
 
 ## Overview Dashboard
 
-The **Overview** page (`/`, reachable by clicking the OrcaCD logo) shows the state of all your applications at a glance:
-
-| Card                   | Content                                                                                                                              |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| **Status**             | Number of applications that are synced and healthy, broken down by status                                                            |
-| **Deployments**        | Successful and failed deployments of the last 7 days and the success rate                                                            |
-| **Agents**             | How many agents are online, when offline agents were last seen and which agents cannot reach Docker                                  |
-| **Needs attention**    | Applications that are unhealthy, stopped, out of sync, failed their last sync or whose agent is offline or in error, with the reason |
-| **Recent deployments** | The latest deployments across all applications                                                                                       |
-| **Repositories**       | Sync state of your repositories                                                                                                      |
-
-If the last sync of an application in **Needs attention** failed and its agent is online, a **Retry** button redeploys it directly from the dashboard.
-
-As long as no application exists, the dashboard is replaced by a **Get started** checklist that guides you through connecting an agent and a repository, creating the first application and optionally setting up [notifications](/docs/advanced/notifications).
+The **Overview** page shows the status of all applications, recent deployments and agents at a glance and lists the applications that need your attention, e.g. because they are unhealthy or their last deployment failed.
 
 ![Overview dashboard](/assets/docs/overview-dashboard.png?url)
-
-The **Applications** page lists all applications. You can search them, filter them by status or agent and switch between a grid and a list view.
 
 ## Creating an Application
 
@@ -49,20 +34,7 @@ OrcaCD reads the Compose file from the latest commit of the branch and immediate
 
 ## Application Details
 
-Opening an application shows its details page. Next to the name are the [sync and health status](#application-status). If the last deployment or sync failed, the error is shown at the top.
-
-Four info cards summarize the application:
-
-| Card              | Content                                                                                              |
-| ----------------- | ---------------------------------------------------------------------------------------------------- |
-| **Repository**    | Repository, branch, sync type of the repository and, if enabled, image polling and the image webhook |
-| **Latest Commit** | Hash and message of the commit the application is at                                                 |
-| **Target Host**   | The Agent that runs the application                                                                  |
-| **Last Sync**     | When the application was last synced and what triggered it (see below)                               |
-
-The **Last Sync** card shows one of the following triggers: manually, application creation, repository polling, repository webhook, GitHub Actions, image polling or image webhook.
-
-Below the cards, the **Manifest** tab shows the current Compose file with its path. The **Diff** tab compares it with the previous version of the Compose file and shows the number of added and removed lines.
+The details page of an application shows its [status](#application-status), the repository, the deployed commit, the Agent and what triggered the last sync. Below, you can see the current Compose file and a diff to the previous version.
 
 ![Application details with the Deploy dropdown](/assets/docs/application-details.png?url)
 
@@ -120,18 +92,9 @@ You can switch between a table and a timeline view. The search filters the histo
 
 ## Application Settings
 
-The sidebar of an application contains the pages **Details** and **History** as well as the settings pages **General** and **Image Updates**.
-
 ### General
 
-The general settings are split into the following cards:
-
-| Card            | Settings                                           |
-| --------------- | -------------------------------------------------- |
-| **Application** | Name, icon and the Agent that runs the application |
-| **Source**      | Repository, branch and Compose file                |
-| **Deployment**  | [Delete old images](#delete-old-images)            |
-| **Danger zone** | Delete the application                             |
+Change the name, icon, Agent, repository, branch and Compose file of the application, or delete it.
 
 Saving does not deploy the application. If you change the Compose file, the Agent or the name, a notification with a **Deploy** button appears so you can apply the changes right away.
 

@@ -3,6 +3,16 @@ title: Common Issues
 description: Solutions to frequently encountered problems
 ---
 
+## Setup code is missing in the Hub logs
+
+**Symptoms:** `docker compose logs hub` does not show a setup code for the first admin account.
+
+**Checks:**
+
+1. The setup code is only printed as long as no user exists. If an account was already created, log in or [recover the account](/docs/troubleshooting/account-recovery).
+2. The setup code is logged with the `warn` level. Make sure `LOG_LEVEL` is not set to `error` or `fatal`.
+3. A new setup code is generated on every start of the Hub. Always use the code from the latest start.
+
 ## Agent stays Offline after connecting
 
 **Symptoms:** The Agent is running but shows as **Offline** in the Hub UI.

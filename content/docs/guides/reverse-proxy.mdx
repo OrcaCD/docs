@@ -75,9 +75,9 @@ services:
       - ALL
     ports:
       - "127.0.0.1:8080:8080"
-    labels: // [!code ++]
-      - "traefik.enable=true" // [!code ++]
-      - "traefik.http.routers.orcacd.rule=Host(`orcacd.example.com`)" // [!code ++]
+    labels: # [!code ++]
+      - "traefik.enable=true" # [!code ++]
+      - "traefik.http.routers.orcacd.rule=Host(`orcacd.example.com`)" # [!code ++]
     volumes:
       - ./data/hub:/app/data
 ```

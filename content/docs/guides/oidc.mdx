@@ -1,6 +1,6 @@
 ---
 title: OIDC Authentication
-description: Learn how to use OIDC providers for auhentication in OrcaCD
+description: Learn how to use OIDC providers for authentication in OrcaCD
 ---
 
 OrcaCD supports OIDC authentication, allowing users to log in using their existing accounts from various OIDC providers. This guide will walk you through the process of setting up OIDC authentication in OrcaCD.
@@ -9,9 +9,9 @@ OrcaCD supports OIDC authentication, allowing users to log in using their existi
 	When using OIDC authentication, you can disable password login to enhance security. This ensures
 	that users can only log in using their OIDC provider accounts, reducing the risk of unauthorized
 	access through weak or compromised passwords. Before disabling password login, make sure the OIDC
-	authentication is properly configured and tested.
+	authentication is properly configured and tested, and that at least one admin can log in via SSO.
 
-    To disable password login, set the `DISABLE_LOCAL_AUTH` environment variable. Look at the [environment variables documentation](/docs/configuration/env-variables) for more details.
+    To disable password login, set the `DISABLE_LOCAL_AUTH` environment variable. Look at the [environment variables documentation](/docs/configuration/env-variables) for more details. If you lock yourself out, see [Account Recovery](/docs/troubleshooting/account-recovery).
 
 </Callout>
 
@@ -21,7 +21,7 @@ To set up OIDC authentication with Pocket ID, follow these steps:
 
 ### 1. Create a Pocket ID Application
 
-Go to your Pocket ID dashboard and create a new application. Give it a name and leave the redirect URI blank for now.
+Go to your Pocket ID dashboard and create a new application. Give it a name and leave the callback URL blank for now. You will get it from OrcaCD in step 3.
 
 ![Pocket ID Application Creation](/assets/docs/pocketid-orca-registration.png?url)
 
@@ -29,21 +29,55 @@ You can find the OrcaCD logo [here](https://github.com/OrcaCD/orca-cd/tree/main/
 
 ### 2. Configure OrcaCD
 
-1. Go to the OrcaCD Admin settings and navigate to the OIDC configuration section.
-2. Create a new OIDC provider configuration with the following details:
-   - **Name**: A name for your OIDC provider (e.g., "Pocket ID").
-   - **Issuer URL**: The issuer URL provided by Pocket ID (e.g., `https://example.com`).
+1. Go to the OrcaCD Admin settings, open the **SSO Providers** section and click **Add Provider**.
+2. Fill in the following details:
+   - **Display Name**: A name for your OIDC provider (e.g., "Pocket ID"). It is shown on the login button.
+   - **Issuer URL**: The issuer URL provided by Pocket ID (e.g., `https://id.example.com`).
    - **Client ID**: The client ID from your Pocket ID application.
    - **Client Secret**: The client secret from your Pocket ID application.
-3. Save the configuration and ensure it is enabled.
+3. Click **Create Provider**. The Hub validates the issuer URL before saving, see [provider settings](#provider-settings).
 
 ![OrcaCD OIDC Configuration](/assets/docs/orca-sso-registration.png?url)
 
-### 3. Test the Configuration
+### 3. Set the Callback URL
+
+After saving, the provider list shows the **Callback URL** of the provider. It has the format `<APP_URL>/api/v1/auth/oidc/<provider-id>/callback`. Copy it with the copy button and add it as callback URL to your Pocket ID application.
+
+### 4. Test the Configuration
 
 1. Log out of OrcaCD if you are currently logged in.
-2. Click on the "Login with Pocket ID" button on the login page.
-3. You will be redirected to the Pocket Id login page. Enter your credentials and log in.
+2. Click on the "Continue with Pocket ID" button on the login page.
+3. You will be redirected to the Pocket ID login page. Enter your credentials and log in.
 4. After successful authentication, you will be redirected back to OrcaCD and logged in with your Pocket ID account.
 
 <div className="w-xl mx-auto">![OrcaCD Login Page](/assets/docs/sso-login-screen.png?url)</div>
+
+## Provider settings
+
+| Setting                 | Default | Description                                                                                                                                                                                             |
+| ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Display Name            | -       | Shown on the login button, e.g. "Continue with Pocket ID". At most 100 characters.                                                                                                                      |
+| Issuer URL              | -       | The issuer of the provider. When the provider is saved, the Hub loads the discovery document (`<issuer>/.well-known/openid-configuration`). If that fails, the provider is not saved.                   |
+| Client ID               | -       | The client ID of the application at your provider.                                                                                                                                                      |
+| Client Secret           | -       | The client secret of the application. It is stored encrypted. When editing a provider, leave it blank to keep the current secret.                                                                       |
+| Additional Scopes       | -       | Comma separated list of scopes that are requested in addition to `openid`, `email` and `profile` (e.g. `groups,offline_access`).                                                                        |
+| Enabled                 | on      | Disabled providers are not shown on the login page and can not be used to log in.                                                                                                                       |
+| Require verified emails | on      | Only allow logins if the provider confirms the email address with `email_verified=true`. Otherwise the login fails with "Your identity provider did not confirm a verified email address."              |
+| Allow auto signup       | on      | Create a new OrcaCD user on the first login. If disabled, only users that already exist in OrcaCD can log in; everybody else gets the error "Automatic account creation is disabled for this provider." |
+
+### Self-hosted providers in a private network
+
+The Hub talks to the provider directly to load the discovery document, exchange the login code and fetch user information. These requests are protected against SSRF, so issuers that resolve to a private IP address (e.g. `192.168.x.x` or `10.x.x.x`) are rejected and the provider can not be saved. Add the IP or range of your provider to the `ALLOWED_INTERNAL_IPS` environment variable of the Hub to allow it. See the [environment variables documentation](/docs/configuration/env-variables).
+
+## How SSO users are handled
+
+- **Login flow**: OrcaCD uses the authorization code flow with PKCE (`S256`), a state parameter and a nonce.
+- **User information**: The email address, name and profile picture are read from the ID token. If the ID token does not contain the email address or `email_verified`, the Hub fetches them from the userinfo endpoint of the provider. An email address is required to log in.
+- **Account linking**: On the first login with a provider, OrcaCD looks for an existing user with the same email address and links the SSO login to it. This also works for accounts that were created with a password, including the admin account. If no user exists, a new one is created (see "Allow auto signup"). Later logins are matched by the provider's user ID, and the name and email address are updated from the provider on every login.
+- **Roles**: New SSO users get the role `User`. Groups or roles from the provider are not mapped. Admins can promote users in the **User Management** section of the Admin settings.
+
+<Callout type="warn">
+	Because SSO logins are linked to existing accounts by email address, only disable "Require
+	verified emails" if your provider makes sure that users can not use email addresses they do not
+	own. Otherwise, someone could log in as an existing user, including an admin.
+</Callout>

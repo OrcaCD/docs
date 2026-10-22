@@ -6,18 +6,23 @@ description: Learn how to use a reverse proxy with OrcaCD
 In a production environment, it is strongly recommended to run the OrcaCD Hub behind a reverse proxy with a domain and a valid TLS certificate.
 
 <Callout title="Adjust configuration" type="warn">
-	Make sure to adjust the `TRUSTED_PROXIES` environment variable to include the IP address of your
-	reverse proxy, otherwise the Hub will not be able to determine the correct client IP address. You
-	will also need to set the public URL in the hub and agent environment variables.
+	Make sure to adjust the `TRUSTED_PROXIES` environment variable to include the IP address (or CIDR
+	range) of your reverse proxy, otherwise the Hub will not be able to determine the correct client
+	IP address. You will also need to set the public URL in the hub and agent environment variables.
 </Callout>
 
 ## Nginx
 
 To use Nginx as a reverse proxy for OrcaCD, expose the Hub on localhost only and forward traffic from your public domain to the Hub port.
 
-Use this `server` block in your Nginx config:
+Use this `map` and `server` block in your Nginx config (the `map` block belongs into the `http` context):
 
 ```nginx lineNumbers
+map $http_upgrade $connection_upgrade {
+  default upgrade;
+  ''      close;
+}
+
 server {
   listen 80;
   server_name orcacd.example.com;
@@ -36,7 +41,7 @@ server {
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection $connection_upgrade;
 
-    # Prevent Websocket being closed by Nginx
+    # Prevent the Agent WebSocket and the live updates (SSE) from being closed by Nginx
     proxy_send_timeout                 120s;
     proxy_read_timeout                 120s;
   }
@@ -62,13 +67,17 @@ services:
   hub:
     image: ghcr.io/orcacd/hub:latest
     container_name: orca-hub
-    ports:
-      - "127.0.0.1:8080:8080"
     restart: unless-stopped
     env_file: .env
-    labels: // [!code ++]
-      - "traefik.enable=true" // [!code ++]
-      - "traefik.http.routers.orcacd.rule=Host(`orcacd.example.com`)" // [!code ++]
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - "127.0.0.1:8080:8080"
+    labels: # [!code ++]
+      - "traefik.enable=true" # [!code ++]
+      - "traefik.http.routers.orcacd.rule=Host(`orcacd.example.com`)" # [!code ++]
     volumes:
       - ./data/hub:/app/data
 ```

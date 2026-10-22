@@ -7,16 +7,82 @@ OrcaCD is designed to be safe by default, but of course, there are always additi
 
 ## Harden OrcaCD
 
-- Disable password authentication for the Hub and use a secure OIDC provider instead, that enforces strong authentication methods, including secure multi-factor authentication (MFA).
+- Disable password authentication for the Hub and use a secure OIDC provider instead, that enforces strong authentication methods, including secure multi-factor authentication (MFA). See the [OIDC guide](/docs/guides/oidc).
 - Always run the hub behind a secure reverse proxy and ensure that all communication is encrypted using TLS.
-- Make sure to configure the `TRUSTED_PROXIES` environment variable correctly to prevent IP spoofing attacks.
-- Restrict the IPs that can access the hub by configuring the `ALLOWED_IPS` environment variable. This will prevent unauthorized access to the hub and does not apply to webhooks or the agent connections.
+- Make sure to configure the `TRUSTED_PROXIES` environment variable correctly to prevent IP spoofing attacks. Without it, the IP-based features (`ALLOWED_IPS` and rate limiting) only see the IP of your reverse proxy.
+- Restrict the IPs that can access the hub by configuring the `ALLOWED_IPS` environment variable. This will prevent unauthorized access to the hub. It does not apply to webhooks, GitHub Actions, the health check and the agent connections.
 - Restrict the volumes that can be mounted to locations within the OrcaCD deployments directory by setting the `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR` environment variable to `true`. This will prevent malicious applications from accessing sensitive files on the host system.
+- Keep `ALLOWED_PRIVILEGED_APPS` as short as possible. Applications listed there skip all checks of the [deployment policy](#compose-deployment-policy).
+- Treat `APP_SECRET` and the agent `AUTH_TOKEN` values like passwords.
+
+All environment variables are described on the [environment variables page](/docs/configuration/env-variables).
 
 ## Why is it safe by default?
 
 A big focus of OrcaCD next to ease of use is security. Here are some of the measures we have taken to achieve this:
 
-- All sensitive data is stored encrypted in the database using a modern encryption algorithm ([AEGIS-256](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-aegis-aead-18)).
-- Messages between the Hub and the Agents are encrypted with the same algorithm. The key is computed using the quantum-resistant [ML-KEM](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.pdf) algorithm in combination with [X25519](https://www.rfc-editor.org/rfc/rfc7748.html).
-- We take all security issues seriously. You can find our security policy [here](https://github.com/OrcaCD/orca-cd/blob/main/SECURITY.md).
+### Hub and Agent communication
+
+Every Agent connection performs its own encrypted handshake in addition to TLS:
+
+- The session key is negotiated with a hybrid key exchange of the quantum-resistant [ML-KEM-768](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.pdf) and [X25519](https://www.rfc-editor.org/rfc/rfc7748.html). Both shared secrets are combined with HKDF-SHA256, and the resulting key is bound to the ID of the Agent.
+- Hub and Agent authenticate each other with Ed25519 signatures. The Agent verifies the Hub with the public key contained in its `AUTH_TOKEN`. The Agent signs its part of the handshake with its own private key, which is also part of the `AUTH_TOKEN` and is never sent over the network.
+- All messages except keep-alive pings are encrypted with [AEGIS-256](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-aegis-aead-18). Each message contains the role of the sender and a counter, so messages can not be replayed or reflected back to their sender.
+
+### Data at rest
+
+Sensitive database fields, such as repository credentials, webhook secrets, OIDC client secrets, notification settings and Compose files, are encrypted with AEGIS-256. The key is derived from `APP_SECRET`. To change the secret, use [`hub key rotate`](/docs/advanced/cli#key-rotate).
+
+### Authentication and sessions
+
+- The first admin account can only be created with a one-time setup code that is printed to the Hub logs. See [installation](/docs/setup/installation).
+- Passwords are hashed with Argon2id.
+- The session cookie is `Secure`, `HttpOnly` and `SameSite=Strict`.
+- Requests that change data are only accepted if their `Origin` header matches `APP_URL` (CSRF protection). Webhooks and GitHub Actions are excluded, as they are authenticated by a secret or an OIDC token.
+- The Hub sends a strict Content Security Policy and other security headers, which, for example, prevent the UI from being embedded in other sites.
+- OIDC logins use PKCE and a nonce.
+
+### Rate limiting
+
+Public endpoints are rate limited per client IP. IPv6 addresses are grouped by their `/64` prefix.
+
+| Endpoint                                               | Limit         | Burst |
+| ------------------------------------------------------ | ------------- | ----- |
+| Login, registration and setup code verification        | 10 per minute | 10    |
+| OIDC login and callback                                | 10 per minute | 5     |
+| Repository webhooks, image webhooks and GitHub Actions | 1 per second  | 10    |
+| Agent connections                                      | 20 per minute | 5     |
+
+### Webhooks
+
+Webhooks return the same `401 Unauthorized` response for unknown IDs, wrong secrets and disabled webhooks. This way they do not reveal whether a repository or application exists.
+
+### Outbound requests (SSRF protection)
+
+Requests the Hub sends to user-configured URLs, for example to Git providers, notification services and OIDC providers, are blocked if they connect to a private, loopback, link-local or otherwise reserved IP address. This is also checked for redirects and for hostnames that resolve to such an address. If you run one of these services in your internal network, allow its IP or range with `ALLOWED_INTERNAL_IPS`.
+
+### Compose deployment policy
+
+Before an Agent deploys an application, it checks the Compose file and rejects options that can weaken container isolation or give access to the host:
+
+- `privileged: true` and `use_api_socket`
+- `cap_add` with dangerous capabilities (`ALL`, `SYS_ADMIN`, `SYS_MODULE`, `SYS_PTRACE`, `SYS_RAWIO`, `SYS_BOOT`, `NET_ADMIN`, `BPF`, `PERFMON`, `DAC_READ_SEARCH`, `DAC_OVERRIDE`, `MAC_ADMIN`, `MAC_OVERRIDE`)
+- Host namespaces: `host` as value of `network_mode`, `pid`, `ipc`, `uts`, `userns_mode` or `cgroup`
+- `devices`, `device_cgroup_rules` and `volumes_from`
+- `security_opt` entries other than `no-new-privileges`
+- Top-level volumes with `driver_opts`
+- Bind mounts and `env_file` paths that point to sensitive host paths, e.g. `/`, `/etc`, `/root`, `/proc`, `/sys`, `/dev`, `/run`, the Docker socket or `/var/lib/docker`, as well as paths below `/home` that contain sensitive files or directories like `.ssh`, `.aws` or `.docker`
+
+With `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR=true`, the deny-list for bind mounts and `env_file` paths is replaced by an allow-list: they have to be located inside the deployments directory of the Agent.
+
+If an application really needs one of the rejected options, add its ID to `ALLOWED_PRIVILEGED_APPS` on the Agent.
+
+<Callout type="warn">
+	Applications in `ALLOWED_PRIVILEGED_APPS` skip **all** checks of the deployment policy, including
+	`RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR`. Anyone who can change their Compose file can potentially
+	take over the host.
+</Callout>
+
+### Security policy
+
+We take all security issues seriously. You can find our security policy [here](https://github.com/OrcaCD/orca-cd/blob/main/SECURITY.md).

@@ -3,16 +3,18 @@ title: Documentation
 description: Contribute to the OrcaCD website or documentation
 ---
 
-This guide explains how to add or edit the OrcaCD documentation. The source code of the documentation is stored in the [OracaCD/docs GitHub repository](https://github.com/OrcaCD/docs).
+This guide explains how to add or edit the OrcaCD documentation. The source code of the documentation is stored in the [OrcaCD/docs GitHub repository](https://github.com/OrcaCD/docs).
 
 ## 1. Where docs live
 
-All markdown pages are under `/content/docs`. The file `meta.json` controls the sidebar structure and order.
+All pages are MDX files under `/content/docs`. The file `/content/docs/meta.json` controls the sidebar structure and order. A section folder can have its own `meta.json` to define the order of its pages (e.g. `/content/docs/guides/meta.json`).
+
+To run the site locally, install the dependencies with `pnpm install` and start the development server with `pnpm run dev`.
 
 ## 2. Adding a new page
 
 1. Pick the correct folder that matches a collection pattern (e.g. `/guides`).
-2. Create `/content/docs/<section>/<slug>.md`.
+2. Create `/content/docs/<section>/<slug>.mdx`.
 3. Add the frontmatter code:
 
 ```yaml lineNumbers
@@ -22,15 +24,25 @@ description: Get OrcaCD running quickly with Docker installation
 ---
 ```
 
-4. Run `npm run dev` and check your page at `http://localhost:3000/docs/<section>/<slug>`.
+4. Run `pnpm run dev` and check your page at `http://localhost:3000/docs/<section>/<slug>`.
+5. If the section has its own `meta.json`, add the new page to its `pages` list.
 
 <Callout title="Components">
-	To use components in the documentation please look at the [Fumadadocs Documentation for
+	To use components in the documentation please look at the [Fumadocs Documentation for
 	Markdown](https://www.fumadocs.dev/docs/markdown)
 </Callout>
 
 ## 3. Submitting changes
 
-After making changes you can create a pull request to the `main` branch. Please make sure to commit using Conventional Commits (`docs: update guides`).
+Before opening a pull request, format and check your changes:
+
+```sh
+pnpm run format       # format with oxfmt
+pnpm run lint         # lint with oxlint
+pnpm run types:check  # type check
+pnpm run build        # make sure the site builds
+```
+
+After that you can create a pull request to the `main` branch. Please make sure to commit using Conventional Commits (`docs: update guides`).
 
 Thanks for helping out!

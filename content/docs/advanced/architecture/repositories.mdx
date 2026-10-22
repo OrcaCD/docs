@@ -3,47 +3,53 @@ title: Repositories
 description: Connecting and managing Git repositories in OrcaCD
 ---
 
-A **Repository** in OrcaCD is a Git repository that contains Docker Compose files. OrcaCD keeps the repository in sync with its remote and uses it as the source of truth for your deployments.
+A **Repository** in OrcaCD is a Git repository that contains Docker Compose files. OrcaCD keeps your applications in sync with the repository and uses it as the source of truth for your deployments.
+
+OrcaCD does not clone the repository. It reads branches, the file tree, commits and Compose files through the API of the Git provider.
 
 ## Supported Providers
 
 - GitHub
-- GitLab
+- GitLab (GitLab.com or self-hosted)
 - Gitea
 - Azure DevOps
-- Bitbucket
-- Generic (Git)
+
+<Callout>
+	Bitbucket and generic Git repositories are not supported yet. They are shown in the UI but cannot
+	be selected.
+</Callout>
 
 ## Adding a Repository
 
 1. Navigate to the **Repositories** page and click **Add Repository**.
-2. Enter the repository URL (e.g., `https://github.com/your-org/your-repo`).
-3. Select the provider.
-4. Choose an authentication method.
-5. Choose a sync strategy.
-6. Save.
+2. **Provider**: Select the Git provider.
+3. **Repository**: Enter the repository URL (e.g., `https://github.com/your-org/your-repo`) and optionally an auth token. When you continue, OrcaCD tests the connection to the repository.
+4. **Sync type**: Choose a [sync strategy](#sync-strategies) and click **Connect Repository**.
+5. **Summary**: For the webhook sync type, OrcaCD shows the webhook URL and secret. Copy the secret, it is only shown once.
 
-OrcaCD will immediately attempt to clone the repository and perform an initial sync.
+![Add Repository dialog](/assets/docs/create-repository.png?url)
 
-## Authentication Methods
+OrcaCD stores the URL without a trailing `/` and without a `.git` suffix. Adding a repository whose URL and sync type match an existing repository fails with `409 Conflict`.
 
-### None
+## Authentication
 
-For public repositories, no credentials are required **but recommended** for security.
-
-### Token (HTTPS)
-
-Use a personal access token or deploy token. Enter the token in the **Auth Token** field.
+If you enter an auth token, OrcaCD uses token authentication. Without a token, the repository is accessed without credentials, which only works for public repositories.
 
 For GitHub, create a [fine-grained personal access token](https://github.com/settings/tokens) with read access to **Contents**.
 
 For GitLab, create a [project access token](https://docs.gitlab.com/ee/user/project/settings/project_access_tokens.html) with `read_repository` scope.
 
+You can change or remove the token later in the **Auth** settings of the repository. Leave the field blank to remove authentication. OrcaCD tests the connection before saving.
+
 ## Sync Strategies
+
+The sync type can be changed later in the **Edit Sync** settings of the repository.
+
+![Repository sync settings](/assets/docs/repository-sync-settings.png?url)
 
 ### Polling
 
-OrcaCD periodically checks the remote repository for new commits. The minimum polling interval is **30 seconds**; the default is **60 seconds**.
+OrcaCD periodically checks the remote repository for new commits. The default polling interval is **60 seconds**. In the UI, the interval can be set between 60 seconds and 24 hours.
 
 Use polling when:
 
@@ -52,23 +58,35 @@ Use polling when:
 
 ### Webhook
 
-OrcaCD listens for push events from your Git provider via webhook. This is more efficient than polling and reacts to new commits instantly.
+OrcaCD listens for push events from your Git provider via webhook. This is more efficient than polling and reacts to new commits instantly. See [Webhooks](/docs/configuration/webhooks#git-providers) for the setup with your Git provider.
+
+To not reveal whether a repository exists, the webhook endpoint returns the same `401` response for unknown repositories, wrong secrets and repositories without the webhook sync type. Webhook requests are rate limited.
 
 ### Manual
 
 The repository is only synced when you explicitly trigger a sync from the UI or API.
 
+### What Happens on a Sync
+
+Independent of the sync type, you can always sync a repository manually with **Sync** on the Repositories page or **Sync repository** on the details page of an application.
+
+On every sync, OrcaCD fetches the latest commit of each branch used by the applications of the repository. If the Compose file of an application changed, OrcaCD deploys it. Otherwise, only the new commit is recorded.
+
 ## GitHub Actions OIDC
 
-For GitHub repositories, you can enable **GitHub Actions OIDC** integration. This allows GitHub Actions workflows to trigger deployments directly without storing a long-lived token in your CI secrets.
+For GitHub repositories, you can enable **GitHub Actions Access** in the sync settings of the repository. This allows GitHub Actions workflows to trigger deployments directly without storing a long-lived token in your CI secrets.
 
-See the [GitHub Actions guide](/docs/guides/github-actions) for details.
+In the same place you can restrict the allowed actions, branches and workflows. See the [GitHub Actions guide](/docs/guides/github-actions) for details.
+
+## Deleting a Repository
+
+Deleting a repository also deletes all of its applications. OrcaCD first removes the applications from their Agents, so all affected Agents must be online. If an Agent is offline or fails to remove an application, the deletion stops with an error.
 
 ## Repository Status
 
 | Status    | Meaning                            |
 | --------- | ---------------------------------- |
-| `success` | Last sync completed without errors |
-| `syncing` | Sync is in progress                |
-| `failed`  | Last sync failed                   |
-| `unknown` | Repository has not been synced yet |
+| `Success` | Last sync completed without errors |
+| `Syncing` | Sync is in progress                |
+| `Failed`  | Last sync failed                   |
+| `Unknown` | Repository has not been synced yet |

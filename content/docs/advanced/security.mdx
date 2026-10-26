@@ -45,6 +45,8 @@ Sensitive database fields, such as repository credentials, webhook secrets, OIDC
 - The Hub sends a strict Content Security Policy and other security headers, which, for example, prevent the UI from being embedded in other sites.
 - OIDC logins use PKCE and a nonce. An SSO login is not linked to an account whose user changed the email address themselves, see [OIDC](/docs/guides/oidc#how-sso-users-are-handled).
 
+![Sign out everywhere](/assets/docs/security-sessions.png?url)
+
 ### Rate limiting
 
 Public endpoints are rate limited per client IP. IPv6 addresses are grouped by their `/64` prefix.

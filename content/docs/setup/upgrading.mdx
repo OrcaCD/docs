@@ -30,3 +30,36 @@ docker compose pull && docker compose up -d
 	Always upgrade the Hub and all Agents to the same version. Changes to the encrypted connection
 	between Hub and Agent can prevent older Agents from connecting to a newer Hub and vice versa.
 </Callout>
+
+## Upgrading to v0.5.0
+
+### Give the Agent its own env file
+
+Up to v0.4.0, the default `docker-compose.yml` used the same `.env` file for Hub and Agent. Compose files deployed by the Agent can read the Agent's environment, so they could also read the `APP_SECRET` of the Hub. Starting with v0.5.0, the Agent removes `APP_SECRET` and `OLD_APP_SECRET` from its environment at startup and logs a warning if it finds them. To get rid of the warning, move the Agent settings into their own file:
+
+1. Create an `agent.env` file next to your `docker-compose.yml` (see the [template](https://raw.githubusercontent.com/OrcaCD/orca-cd/main/agent.env.example)).
+2. Move `HUB_URL`, `AUTH_TOKEN` and all other [Agent variables](/docs/configuration/env-variables#agent) from `.env` to `agent.env`.
+3. Change `env_file: .env` to `env_file: agent.env` in the `agent` service:
+
+```yml title="docker-compose.yml"
+services:
+  agent:
+    env_file: .env # [!code --]
+    env_file: agent.env # [!code ++]
+```
+
+### Check your Compose files against the stricter deployment policy
+
+The [deployment policy](/docs/advanced/security#compose-deployment-policy) of the Agent rejects more options than before. Applications that were deployed with v0.4.0 can fail on their next deployment or image update if they use:
+
+- `container:<name>` for `network_mode`, `pid`, `ipc`, `uts`, `userns_mode` or `cgroup`
+- Services with a `provider`, top-level `jobs`, or `pre_start` hooks that use rejected options
+- Top-level `secrets` or `configs` with a `file` source outside the allowed paths
+- Bind mounts of parent directories of sensitive paths (e.g. `/var`), of `/home` or of a home directory like `/home/alice`
+- Host paths that pass through a symlink inside the deployments directory or point to the directory of another application
+
+If an application really needs one of these options, add its ID to `ALLOWED_PRIVILEGED_APPS` on the Agent.
+
+## Upgrading to v0.4.0
+
+Agent tokens now also contain the signing keys for the [encrypted handshake](/docs/advanced/security#hub-and-agent-communication). Tokens created before v0.4.0 no longer work and the Agent logs `token is missing signing-key segment`. After upgrading, [rotate the token](/docs/advanced/architecture/agents#rotating-an-agent-token) of every Agent, update `AUTH_TOKEN` and recreate the Agent.

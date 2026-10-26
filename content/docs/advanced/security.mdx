@@ -14,6 +14,7 @@ OrcaCD is designed to be safe by default, but of course, there are always additi
 - Restrict the volumes that can be mounted to locations within the OrcaCD deployments directory by setting the `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR` environment variable to `true`. This will prevent malicious applications from accessing sensitive files on the host system.
 - Keep `ALLOWED_PRIVILEGED_APPS` as short as possible. Applications listed there skip all checks of the [deployment policy](#compose-deployment-policy).
 - Treat `APP_SECRET` and the agent `AUTH_TOKEN` values like passwords.
+- Give the Agent its own env file (`agent.env` in the default `docker-compose.yml`) and never pass it the `.env` file of the Hub. See [Agent environment](#agent-environment).
 
 All environment variables are described on the [environment variables page](/docs/configuration/env-variables).
 
@@ -38,9 +39,11 @@ Sensitive database fields, such as repository credentials, webhook secrets, OIDC
 - The first admin account can only be created with a one-time setup code that is printed to the Hub logs. See [installation](/docs/setup/installation).
 - Passwords are hashed with Argon2id.
 - The session cookie is `Secure`, `HttpOnly` and `SameSite=Strict`.
+- The Hub checks every request against the database, so role changes and deleted users take effect immediately. Open live update connections are checked every 30 seconds.
+- Changing or resetting a password signs the user out on all other devices. Under **Settings → Security → Sessions**, users can end all of their sessions with **Sign out everywhere**. Disabling or deleting an OIDC provider ends the sessions of all users linked to it.
 - Requests that change data are only accepted if their `Origin` header matches `APP_URL` (CSRF protection). Webhooks and GitHub Actions are excluded, as they are authenticated by a secret or an OIDC token.
 - The Hub sends a strict Content Security Policy and other security headers, which, for example, prevent the UI from being embedded in other sites.
-- OIDC logins use PKCE and a nonce.
+- OIDC logins use PKCE and a nonce. An SSO login is not linked to an account whose user changed the email address themselves, see [OIDC](/docs/guides/oidc#how-sso-users-are-handled).
 
 ### Rate limiting
 
@@ -59,21 +62,34 @@ Webhooks return the same `401 Unauthorized` response for unknown IDs, wrong secr
 
 ### Outbound requests (SSRF protection)
 
-Requests the Hub sends to user-configured URLs, for example to Git providers, notification services and OIDC providers, are blocked if they connect to a private, loopback, link-local or otherwise reserved IP address. This is also checked for redirects and for hostnames that resolve to such an address. If you run one of these services in your internal network, allow its IP or range with `ALLOWED_INTERNAL_IPS`.
+Requests the Hub sends to user-configured URLs, for example to Git providers, notification services and OIDC providers, are blocked if they connect to a private, loopback, link-local or otherwise reserved IP address. This is also checked for redirects, for hostnames that resolve to such an address and for IPv4 addresses embedded in NAT64 and 6to4 IPv6 addresses. If you run one of these services in your internal network, allow its IP or range with `ALLOWED_INTERNAL_IPS`.
 
 ### Compose deployment policy
 
-Before an Agent deploys an application, it checks the Compose file and rejects options that can weaken container isolation or give access to the host:
+Before an Agent deploys an application, it checks the Compose file and rejects options that can weaken container isolation or give access to the host. The check runs for every deployment, including redeploys after an image update. If a Compose file is rejected, the Agent keeps the previously deployed file.
+
+The following options are rejected for services and `pre_start` lifecycle hooks:
 
 - `privileged: true` and `use_api_socket`
 - `cap_add` with dangerous capabilities (`ALL`, `SYS_ADMIN`, `SYS_MODULE`, `SYS_PTRACE`, `SYS_RAWIO`, `SYS_BOOT`, `NET_ADMIN`, `BPF`, `PERFMON`, `DAC_READ_SEARCH`, `DAC_OVERRIDE`, `MAC_ADMIN`, `MAC_OVERRIDE`)
-- Host namespaces: `host` as value of `network_mode`, `pid`, `ipc`, `uts`, `userns_mode` or `cgroup`
+- Shared namespaces: `host` or `container:<name>` as value of `network_mode`, `pid`, `ipc`, `uts`, `userns_mode` or `cgroup`. `service:<name>` is allowed.
 - `devices`, `device_cgroup_rules` and `volumes_from`
 - `security_opt` entries other than `no-new-privileges`
-- Top-level volumes with `driver_opts`
-- Bind mounts and `env_file` paths that point to sensitive host paths, e.g. `/`, `/etc`, `/root`, `/proc`, `/sys`, `/dev`, `/run`, the Docker socket or `/var/lib/docker`, as well as paths below `/home` that contain sensitive files or directories like `.ssh`, `.aws` or `.docker`
+- Host paths of bind mounts, `env_file` entries and top-level `secrets` and `configs` with a `file` source that point to sensitive host paths:
+  - `/`, `/etc`, `/boot`, `/root`, `/usr`, `/bin`, `/sbin`, `/lib`, `/lib64`, `/proc`, `/sys`, `/dev`, `/run`, `/var/run`, the Docker socket, `/var/lib/docker` and `/var/lib/containerd`, everything below them and their parent directories like `/var`
+  - `/home` and the home directories directly below it, as well as paths below `/home` that contain sensitive files or directories like `.ssh`, `.aws`, `.kube` or `.docker`
+  - Paths inside the deployments directory that belong to another application or pass through a symlink
 
-With `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR=true`, the deny-list for bind mounts and `env_file` paths is replaced by an allow-list: they have to be located inside the deployments directory of the Agent.
+In addition, the Agent rejects:
+
+- Services with a `provider`, since Compose would run the provider as a program inside the Agent
+- `privileged: true` on `post_start` and `pre_stop` hooks
+- Top-level `jobs`
+- Top-level volumes with `driver_opts`
+
+Paths are normalized before the check, so spellings like `/./etc` or `/var/../etc` are rejected as well.
+
+With `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR=true`, the deny-list for host paths is replaced by an allow-list: they have to be located inside the deployment directory of the application.
 
 If an application really needs one of the rejected options, add its ID to `ALLOWED_PRIVILEGED_APPS` on the Agent.
 
@@ -82,6 +98,12 @@ If an application really needs one of the rejected options, add its ID to `ALLOW
 	`RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR`. Anyone who can change their Compose file can potentially
 	take over the host.
 </Callout>
+
+### Agent environment
+
+Compose files can read the environment of the Agent through variable interpolation (e.g. `${AUTH_TOKEN}`). To prevent applications from reading secrets this way, the Agent removes `AUTH_TOKEN` from its environment after startup. It also removes `APP_SECRET` and `OLD_APP_SECRET` of the Hub and logs a warning if it finds them, for example because Hub and Agent share the same `.env` file.
+
+All other variables of the Agent stay available to deployed Compose files, so only put settings into the Agent's env file that applications are allowed to read.
 
 ### Security policy
 

@@ -11,23 +11,26 @@ Before deploying the Agent, you need to register it in the Hub to obtain an auth
 
 1. Navigate to the **Agents** page in the OrcaCD UI.
 2. Click **Add Agent** and give it a name (e.g., `production`, `staging`) and optionally an icon.
-3. Copy the generated `AUTH_TOKEN` (only shown once).
+3. The setup dialog shows a `compose.yml` for the Agent that already contains `HUB_URL`, the generated `AUTH_TOKEN` and an Agent image matching the version of the Hub. Copy it with **Copy**, or copy only the token with **Copy agent auth token** in the menu next to it. The token is only shown once.
+4. Start the Agent (see below). The dialog waits for the first connection and shows **Connected** as soon as the Agent is online. If the Agent connects but cannot reach Docker, the dialog shows an error instead.
 
 ![Create Agent](/assets/docs/create-agent.png?url)
+
+`HUB_URL` in the generated file is the address you used to open the UI. If the Agent reaches the Hub through a different URL, change it before starting the Agent.
 
 ## Deploying an Agent
 
 ### Same Host as the Hub
 
-The default `docker-compose.yml` includes both Hub and Agent. If you are running both on the same machine, just set the `AUTH_TOKEN` in your `.env` and restart:
+The default `docker-compose.yml` includes both Hub and Agent. If you are running both on the same machine, set the `AUTH_TOKEN` in your `agent.env` and recreate the Agent:
 
 ```bash
-docker compose up -d
+docker compose up -d agent
 ```
 
 ### Remote Host
 
-To deploy an Agent on a separate server, copy only the Agent service definition to that machine. See [installation](/docs/setup/installation) for instructions on how to set up the Agent service.
+To deploy an Agent on a separate server, save the `compose.yml` from the setup dialog on that machine and start it with `docker compose up -d`. If you prefer to keep the token out of the Compose file, move `HUB_URL` and `AUTH_TOKEN` into an `agent.env` file and reference it with `env_file`, as in the [default compose file](https://github.com/OrcaCD/orca-cd/blob/main/docker-compose.yml).
 
 The Agent will connect to the Hub. Once connected, its status in the Hub UI changes to **Online**.
 
@@ -64,10 +67,10 @@ Before deploying, the Agent checks the Compose file against the [deployment poli
 
 If a token is compromised or needs to be rotated, navigate to the Agent in the UI, open the options menu, and select **Rotate token**. A new token is generated immediately, the old token becomes invalid and a running Agent is disconnected right away.
 
-Update the `AUTH_TOKEN` in the Agent's `.env` and recreate the container:
+Update the `AUTH_TOKEN` in the Agent's `agent.env` (or its Compose file) and recreate the container:
 
 ```bash
-docker compose up -d
+docker compose up -d agent
 ```
 
 ## Deleting an Agent

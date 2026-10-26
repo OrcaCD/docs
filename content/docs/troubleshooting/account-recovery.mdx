@@ -12,7 +12,10 @@ There are two ways to reset a password for a user:
 docker compose exec hub /app/hub reset-password --email <email>
 ```
 
-<Callout>The user with the reset password has to change the password on the next login.</Callout>
+<Callout>
+	The user with the reset password has to change the password on the next login. Resetting a
+	password also signs the user out on all devices.
+</Callout>
 
 <Callout type="warn">
 	Passwords can only be reset for users with a local account. Users that only log in via SSO have to

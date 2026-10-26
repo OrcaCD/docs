@@ -3,7 +3,7 @@ title: Environment Variables
 description: Complete reference for all OrcaCD configuration options
 ---
 
-Below are all the environment variables supported by OrcaCD. These should be configured in your `.env` file.
+Below are all the environment variables supported by OrcaCD. With the default `docker-compose.yml`, the Hub reads them from the `.env` file and the Agent from the `agent.env` file.
 Be cautious when modifying environment variables that are not recommended to change.
 
 Each variable is tagged with a **Type**:
@@ -38,6 +38,13 @@ These environment variables can be used in both the agent and the hub.
 | `DEMO`                 | `false`       | <Badge variant="gray">Optional</Badge>     | This mode disables all functions except the login and additionally seeds some demo data in the database                                                                                                                                                                                                                                                                                                         |
 
 ## Agent
+
+<Callout type="warn">
+	Compose files deployed by the Agent can read the Agent's environment through variable
+	interpolation. Only put Agent settings into its environment. The Agent removes `AUTH_TOKEN`,
+	`APP_SECRET` and `OLD_APP_SECRET` from its environment at startup and logs a warning if it finds
+	the secrets of the Hub.
+</Callout>
 
 | Variable                              | Default Value  | Type                                     | Description                                                                                                                                                                                                                                                                                                                                                                             |
 | ------------------------------------- | -------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

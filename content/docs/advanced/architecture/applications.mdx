@@ -123,6 +123,8 @@ Image polling lets OrcaCD automatically pull updated Docker images and restart c
 
 The Agent compares the images of the application with the registry. If any image changed, it pulls the images and redeploys the application.
 
+If the check fails, for example because the Agent has no credentials for a private registry, the application changes to `Out of Sync` and the error is recorded in its history. Repeated failures with the same error are only recorded once. The next successful check sets the application back to `Synced`. See [common issues](/docs/troubleshooting/common-issues#deployment-is-stuck-in-syncing) for registry credentials.
+
 #### Image Pull Webhook
 
 Instead of polling, your container registry can notify OrcaCD via a webhook when a new image is pushed.

@@ -131,7 +131,7 @@ APP_URL=https://orca.tail1234.ts.net
 TRUSTED_PROXIES=127.0.0.1
 ```
 
-If the Agent runs in the same Compose project, it can no longer reach the Hub as `hub`, because the Hub now uses the network of the Tailscale container. Set `HUB_URL=http://tailscale:8080` instead. The connection between Hub and Agent is [end-to-end encrypted](/docs/advanced/security#hub-and-agent-communication), even without TLS.
+If the Agent runs in the same Compose project, it can no longer reach the Hub as `hub`, because the Hub now uses the network of the Tailscale container. Set `HUB_URL=http://tailscale:8080` in its `agent.env` instead. The connection between Hub and Agent is [end-to-end encrypted](/docs/advanced/security#hub-and-agent-communication), even without TLS.
 
 ## Connecting Agents
 
@@ -139,7 +139,7 @@ An Agent on the same machine as the Hub doesn't need Tailscale. It can connect t
 
 For Agents on other machines, install Tailscale on these machines as well and set `HUB_URL` to the MagicDNS name of the Hub:
 
-```bash title=".env"
+```bash title="agent.env"
 HUB_URL=https://orca.tail1234.ts.net
 ```
 

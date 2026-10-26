@@ -15,6 +15,7 @@ OrcaCD is designed to be safe by default, but of course, there are always additi
 - Keep `ALLOWED_PRIVILEGED_APPS` as short as possible. Applications listed there skip all checks of the [deployment policy](#compose-deployment-policy).
 - Treat `APP_SECRET` and the agent `AUTH_TOKEN` values like passwords.
 - Give the Agent its own env file (`agent.env` in the default `docker-compose.yml`) and never pass it the `.env` file of the Hub. See [Agent environment](#agent-environment).
+- Enable [signed commits](/docs/advanced/architecture/repositories#signed-commits) for repositories, so that a compromised Git account can not deploy changes.
 
 All environment variables are described on the [environment variables page](/docs/configuration/env-variables).
 

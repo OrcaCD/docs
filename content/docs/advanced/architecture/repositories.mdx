@@ -78,6 +78,30 @@ For GitHub repositories, you can enable **GitHub Actions Access** in the sync se
 
 In the same place you can restrict the allowed actions, branches and workflows. See the [GitHub Actions guide](/docs/guides/github-actions) for details.
 
+## Signed Commits
+
+To protect against a compromised Git account, you can require that OrcaCD only deploys commits that are signed by a trusted key. Open the settings of the repository, go to **Signing** and enable **Require signed commits**. Then add the public keys of everyone who is allowed to push deployable commits:
+
+- SSH public keys, one per entry (e.g. `ssh-ed25519 AAAA... user@example.com`)
+- Armored GPG public key blocks (`-----BEGIN PGP PUBLIC KEY BLOCK-----`)
+
+At least one key is required, and up to 50 keys are allowed per repository. Keys are configured per repository.
+
+![Signed commits settings](/assets/docs/repository-signing.png?url)
+
+When the setting is enabled, OrcaCD checks the commit before anything is deployed: for polling, webhooks, GitHub Actions, manual syncs and when an application is created or updated. If the commit is not signed by a trusted key, the sync fails, a [notification](/docs/advanced/notifications) is sent and the history of the application records the rejected commit.
+
+How the signature is checked depends on the provider:
+
+- **GitHub and Gitea**: OrcaCD verifies the signature itself.
+- **GitLab**: OrcaCD accepts a commit if GitLab reports the signature as verified and the key is on the trusted list. The key also has to be added to the GitLab account of the signer. GPG keys are matched by their key ID.
+- **Azure DevOps**: not supported, because its API does not provide signature data.
+
+<Callout>
+	The `allowed_signers` format with an email address in front of the key, SSH certificates and X.509
+	signatures are not supported. Use plain SSH public keys or GPG keys.
+</Callout>
+
 ## Deleting a Repository
 
 Deleting a repository also deletes all of its applications. OrcaCD first removes the applications from their Agents, so all affected Agents must be online. If an Agent is offline or fails to remove an application, the deletion stops with an error.

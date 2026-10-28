@@ -7,16 +7,60 @@ OrcaCD is designed to be safe by default, but of course, there are always additi
 
 ## Harden OrcaCD
 
-- Disable password authentication for the Hub and use a secure OIDC provider instead, that enforces strong authentication methods, including secure multi-factor authentication (MFA).
+- Disable password authentication for the Hub and use a secure OIDC provider instead, that enforces strong authentication methods, including secure multi-factor authentication (MFA). See the [OIDC guide](/docs/guides/oidc).
 - Always run the hub behind a secure reverse proxy and ensure that all communication is encrypted using TLS.
-- Make sure to configure the `TRUSTED_PROXIES` environment variable correctly to prevent IP spoofing attacks.
-- Restrict the IPs that can access the hub by configuring the `ALLOWED_IPS` environment variable. This will prevent unauthorized access to the hub and does not apply to webhooks or the agent connections.
+- Make sure to configure the `TRUSTED_PROXIES` environment variable correctly to prevent IP spoofing attacks. Without it, the IP-based features (`ALLOWED_IPS` and rate limiting) only see the IP of your reverse proxy.
+- Restrict the IPs that can access the hub by configuring the `ALLOWED_IPS` environment variable. This will prevent unauthorized access to the hub. It does not apply to webhooks, GitHub Actions, the health check and the agent connections.
 - Restrict the volumes that can be mounted to locations within the OrcaCD deployments directory by setting the `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR` environment variable to `true`. This will prevent malicious applications from accessing sensitive files on the host system.
+- Keep `ALLOWED_PRIVILEGED_APPS` as short as possible. Applications listed there skip all checks of the [deployment policy](#compose-deployment-policy).
+- Treat `APP_SECRET` and the agent `AUTH_TOKEN` values like passwords.
+- Give the Agent its own env file (`agent.env` in the default `docker-compose.yml`) and never pass it the `.env` file of the Hub. See [Agent environment](#agent-environment).
+- Enable [signed commits](/docs/advanced/architecture/repositories#signed-commits) for repositories, so that a compromised Git account can not deploy changes.
+
+All environment variables are described on the [environment variables page](/docs/configuration/env-variables).
 
 ## Why is it safe by default?
 
 A big focus of OrcaCD next to ease of use is security. Here are some of the measures we have taken to achieve this:
 
-- All sensitive data is stored encrypted in the database using a modern encryption algorithm ([AEGIS-256](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-aegis-aead-18)).
-- Messages between the Hub and the Agents are encrypted with the same algorithm. The key is computed using the quantum-resistant [ML-KEM](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.pdf) algorithm in combination with [X25519](https://www.rfc-editor.org/rfc/rfc7748.html).
-- We take all security issues seriously. You can find our security policy [here](https://github.com/OrcaCD/orca-cd/blob/main/SECURITY.md).
+### Hub and Agent communication
+
+Every Agent connection performs its own encrypted handshake in addition to TLS:
+
+- The session key is negotiated with a hybrid key exchange of the quantum-resistant [ML-KEM-768](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.pdf) and [X25519](https://www.rfc-editor.org/rfc/rfc7748.html). Both shared secrets are combined with HKDF-SHA256, and the resulting key is bound to the ID of the Agent.
+- Hub and Agent authenticate each other with Ed25519 signatures. The Agent verifies the Hub with the public key contained in its `AUTH_TOKEN`. The Agent signs its part of the handshake with its own private key, which is also part of the `AUTH_TOKEN` and is never sent over the network.
+- All messages except keep-alive pings are encrypted with [AEGIS-256](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-aegis-aead-18). Each message contains the role of the sender and a counter, so messages can not be replayed or reflected back to their sender.
+
+### Data at rest
+
+Sensitive database fields, such as repository credentials, webhook secrets, OIDC client secrets, notification settings and Compose files, are encrypted with AEGIS-256. The key is derived from `APP_SECRET`. To change the secret, use [`hub key rotate`](/docs/advanced/cli#key-rotate).
+
+### Authentication and sessions
+
+- The first admin account can only be created with a one-time setup code that is printed to the Hub logs. See [installation](/docs/setup/installation).
+- Passwords are hashed with Argon2id.
+- The Hub checks every request against the database, so role changes and deleted users take effect immediately. Open live update connections are checked every 30 seconds.
+- Changing or resetting a password signs the user out on all other devices. Under **Settings → Security → Sessions**, users can end all of their sessions with **Sign out everywhere**. Disabling or deleting an OIDC provider ends the sessions of all users linked to it.
+- Requests that change data are only accepted if their `Origin` header matches `APP_URL` (CSRF protection). Webhooks and GitHub Actions are excluded, as they are authenticated by a secret or an OIDC token.
+- The Hub sends a strict Content Security Policy and other security headers, which, for example, prevent the UI from being embedded in other sites.
+- OIDC logins use PKCE and a nonce. An SSO login is not linked to an account whose user changed the email address themselves, see [OIDC](/docs/guides/oidc#how-sso-users-are-handled).
+
+![Sign out everywhere](/assets/docs/security-sessions.png?url)
+
+### Webhooks
+
+Webhooks return the same `401 Unauthorized` response for unknown IDs, wrong secrets and disabled webhooks. This way they do not reveal whether a repository or application exists.
+
+### Outbound requests (SSRF protection)
+
+Requests the Hub sends to user-configured URLs, for example to Git providers, notification services and OIDC providers, are blocked if they connect to a private, loopback, link-local or otherwise reserved IP address. This is also checked for redirects, for hostnames that resolve to such an address and for IPv4 addresses embedded in NAT64 and 6to4 IPv6 addresses. If you run one of these services in your internal network, allow its IP or range with `ALLOWED_INTERNAL_IPS`.
+
+### Agent environment
+
+Compose files can read the environment of the Agent through variable interpolation (e.g. `${AUTH_TOKEN}`). To prevent applications from reading secrets this way, the Agent removes `AUTH_TOKEN` from its environment after startup. It also removes `APP_SECRET` and `OLD_APP_SECRET` of the Hub and logs a warning if it finds them, for example because Hub and Agent share the same `.env` file.
+
+All other variables of the Agent stay available to deployed Compose files, so only put settings into the Agent's env file that applications are allowed to read.
+
+### Security policy
+
+We take all security issues seriously. You can find our security policy [here](https://github.com/OrcaCD/orca-cd/blob/main/SECURITY.md).

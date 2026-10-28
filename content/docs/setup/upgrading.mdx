@@ -11,15 +11,22 @@ description: Keep your OrcaCD installation up to date
     To create a backup of your database, you can run the following command:
 
     ```bash
-    docker compose exec hub /app/hub backup
+    docker compose exec hub /app/hub export
     ```
 
-    After running this command make sure to copy the created backup file and include it in your backup strategy.
+    The backup is written to `./data/hub/hub-export-YYYYMMDD-HHMMSS.db` on the host. Make sure to include this file in your backup strategy. See the [CLI reference](../advanced/cli#export) for more details.
 
 </Callout>
 
-For upgrading OrcaCD when using Docker, you just need to pull the latest image and restart the services:
+Before upgrading, check the [changelog](https://github.com/OrcaCD/orca-cd/blob/main/CHANGELOG.md) for breaking changes.
+
+If you pinned the image versions in your `docker-compose.yml` (recommended), update the tags of the `hub` and `agent` images first. Then pull the new images and recreate the containers:
 
 ```bash
 docker compose pull && docker compose up -d
 ```
+
+<Callout>
+	Always upgrade the Hub and all Agents to the same version. Changes to the encrypted connection
+	between Hub and Agent can prevent older Agents from connecting to a newer Hub and vice versa.
+</Callout>

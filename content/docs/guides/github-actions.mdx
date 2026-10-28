@@ -8,31 +8,48 @@ OrcaCD supports triggering deployments directly from GitHub Actions using [GitHu
 ## Prerequisites
 
 - A GitHub repository connected in OrcaCD with provider type **GitHub**
+- **GitHub Actions Access** enabled in the sync settings of the repository in OrcaCD
 - The OrcaCD Hub must be reachable from GitHub's network.
 
 ## Example Workflow
 
-Add a step at the end of your CI workflow to notify OrcaCD after a successful build or image push:
+Add a step at the end of your CI workflow to notify OrcaCD after a successful build or image push. The job needs the `id-token: write` permission to request an OIDC token:
 
 ```yaml
-permissions:
-  id-token: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: OrcaCD/deploy-action@... # Replace ... with the latest version or hash
+        with:
+          # The OrcaCD hub URL, must match the APP_URL of the hub
+          # Required
+          hub: https://orca.example.com
 
-- uses: OrcaCD/deploy-action@... # Replace ... with the latest version or hash
-  with:
-    # The OrcaCD hub URL (required)
-    # Required
-    hub: https://orca.example.com
+          # Whether to sync the repo content (compose files)
+          # Optional, default: false
+          syncRepo: true
 
-    # Whether to sync the repo content (compose files)
-    # Optional, default: true
-    syncRepo: true
-
-    # Whether to pull the latest container image versions,
-    # even it the compose file has not changed
-    # Optional, default: false
-    pullImages: false
+          # Whether to pull the latest container image versions,
+          # even if the compose file has not changed
+          # Optional, default: false
+          pullImages: false
 ```
+
+At least one of `syncRepo` or `pullImages` must be set to `true`, otherwise the action fails.
+
+## Restricting Access
+
+In the sync settings of the repository you can further restrict what GitHub Actions is allowed to do:
+
+- **Allowed actions**: Allow repository sync, image sync or both.
+- **Allowed branches**: Only allow deployments from the listed branches (case-sensitive, exact match). Leave empty to allow all branches.
+- **Allowed workflows**: Only allow the listed workflow files, e.g. `deploy.yml` (case-sensitive). Leave empty to allow all workflows.
+
+Requests that violate these settings are rejected with `403 Forbidden`.
 
 ## Use Cases
 
@@ -46,4 +63,4 @@ When a GitHub Actions workflow runs, it requests a short-lived OIDC token from G
 1. The token's repository claim matches a GitHub repository registered in OrcaCD with GitHub Actions OIDC enabled.
 2. The workflow was **not** triggered by a `pull_request` or `pull_request_target` event (to prevent untrusted forks from triggering deployments).
 
-If verification succeeds, OrcaCD finds all applications linked to the matching repository and branch, then dispatches the requested actions.
+If verification succeeds, OrcaCD finds all applications linked to the matching repository and branch, then dispatches the requested actions. For runs triggered by a tag, OrcaCD uses all branches that contain the tagged commit. With `syncRepo`, the exact commit of the workflow run is deployed, not the latest commit of the branch.

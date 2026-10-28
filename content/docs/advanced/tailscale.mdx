@@ -1,0 +1,229 @@
+---
+title: Tailscale
+description: Run OrcaCD privately in your tailnet with Tailscale
+---
+
+With [Tailscale](https://tailscale.com) you can run the OrcaCD Hub without exposing it to the public internet. The Hub is only reachable from devices in your tailnet, and Agents on other machines connect to it over the tailnet as well. [Tailscale Serve](https://tailscale.com/kb/1312/serve) replaces the reverse proxy: it terminates TLS with a certificate for the MagicDNS name of the machine and forwards the requests to the Hub.
+
+## Prerequisites
+
+- A [Tailscale](https://tailscale.com) account with [MagicDNS](https://tailscale.com/kb/1081/magicdns) and [HTTPS certificates](https://tailscale.com/kb/1153/enabling-https) enabled in the admin console. HTTPS is required, because the login cookie is always marked as `Secure`.
+- The Hub (and optionally an Agent) installed as described in the [installation guide](/docs/setup/installation).
+
+<Callout>
+	The MagicDNS name of your machine, e.g. `orca.tail1234.ts.net`, will be published in the public
+	Certificate Transparency logs once a certificate is issued for it. The Hub itself stays private.
+</Callout>
+
+## Tailscale on the Host
+
+The easiest setup is to install Tailscale directly on the machine that runs the Hub. The Hub keeps listening on `127.0.0.1:8080` as in the default `docker-compose.yml`.
+
+### Install Tailscale [step]
+
+Install Tailscale on the host and connect it to your tailnet, see the [Tailscale install guide](https://tailscale.com/download/linux):
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up --hostname=orca
+```
+
+The Hub will be reachable at `https://orca.<tailnet>.ts.net`. You can find the name of your tailnet in the [DNS settings](https://login.tailscale.com/admin/dns) of the admin console.
+
+### Configure the Hub [step]
+
+Set `APP_URL` to the MagicDNS name of the machine. It has to match the URL in the browser exactly:
+
+```bash title=".env"
+APP_URL=https://orca.tail1234.ts.net
+```
+
+Tailscale Serve sends the IP address of the client in the `X-Forwarded-For` header. The Hub only uses this header if the request comes from a trusted proxy. Requests from the host to the published port reach the Hub from the gateway of the Docker network, so add it to `TRUSTED_PROXIES`:
+
+```bash
+docker network inspect orca_default --format '{{(index .IPAM.Config 0).Gateway}}'
+```
+
+Replace `orca_default` with the network of your Compose project (`docker network ls`), and use the output:
+
+```bash title=".env"
+TRUSTED_PROXIES=172.18.0.1
+```
+
+Recreate the Hub so it picks up the new values:
+
+```bash
+docker compose up -d hub
+```
+
+### Start Tailscale Serve [step]
+
+Forward HTTPS traffic from the tailnet to the Hub:
+
+```bash
+sudo tailscale serve --bg 8080
+```
+
+The configuration is persistent and survives restarts. Check it with `tailscale serve status`. Open `https://orca.<tailnet>.ts.net` from a device in your tailnet and continue with [creating an admin account](/docs/setup/installation#create-an-admin-account).
+
+## Tailscale as a Sidecar Container
+
+If you don't want to install Tailscale on the host, you can run it as a container next to the Hub. The Hub shares the network of the Tailscale container, so it is only reachable through the tailnet.
+
+Create an [auth key](https://tailscale.com/kb/1085/auth-keys) in the admin console and add a Tailscale service to your `docker-compose.yml`:
+
+```yml title="docker-compose.yml" lineNumbers
+services:
+  tailscale: # [!code ++]
+    image: tailscale/tailscale:latest # [!code ++]
+    container_name: orca-tailscale # [!code ++]
+    hostname: orca # [!code ++]
+    restart: unless-stopped # [!code ++]
+    environment: # [!code ++]
+      - TS_AUTHKEY=tskey-auth-... # [!code ++]
+      - TS_STATE_DIR=/var/lib/tailscale # [!code ++]
+      - TS_SERVE_CONFIG=/config/serve.json # [!code ++]
+    volumes: # [!code ++]
+      - ./data/tailscale:/var/lib/tailscale # [!code ++]
+      - ./tailscale:/config # [!code ++]
+
+  hub:
+    image: ghcr.io/orcacd/hub:latest
+    container_name: orca-hub
+    restart: unless-stopped
+    env_file: .env
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    network_mode: service:tailscale # [!code ++]
+    ports: # [!code --]
+      - "127.0.0.1:8080:8080" # [!code --]
+    volumes:
+      - ./data/hub:/app/data
+```
+
+Create `tailscale/serve.json` to forward HTTPS traffic to the Hub. Tailscale replaces `${TS_CERT_DOMAIN}` with the MagicDNS name of the container:
+
+```json title="tailscale/serve.json" lineNumbers
+{
+	"TCP": {
+		"443": {
+			"HTTPS": true
+		}
+	},
+	"Web": {
+		"${TS_CERT_DOMAIN}:443": {
+			"Handlers": {
+				"/": {
+					"Proxy": "http://127.0.0.1:8080"
+				}
+			}
+		}
+	}
+}
+```
+
+In this setup Tailscale Serve connects to the Hub via `127.0.0.1`, so set the `.env` values accordingly:
+
+```bash title=".env"
+APP_URL=https://orca.tail1234.ts.net
+TRUSTED_PROXIES=127.0.0.1
+```
+
+If the Agent runs in the same Compose project, it can no longer reach the Hub as `hub`, because the Hub now uses the network of the Tailscale container. Set `HUB_URL=http://tailscale:8080` in its `agent.env` instead. The connection between Hub and Agent is [end-to-end encrypted](/docs/advanced/security#hub-and-agent-communication), even without TLS.
+
+## Connecting Agents
+
+An Agent on the same machine as the Hub doesn't need Tailscale. It can connect to the Hub through the Docker network, e.g. with `HUB_URL=http://hub:8080`.
+
+For Agents on other machines, install Tailscale on these machines as well and set `HUB_URL` to the MagicDNS name of the Hub:
+
+```bash title="agent.env"
+HUB_URL=https://orca.tail1234.ts.net
+```
+
+Containers can reach the tailnet through Tailscale on the host, but they don't always use MagicDNS to resolve names. If the Agent can't resolve the name of the Hub, add it with its Tailscale IP (`tailscale ip -4` on the Hub machine) to the Agent service:
+
+```yml title="docker-compose.yml"
+services:
+  agent:
+    extra_hosts: # [!code ++]
+      - "orca.tail1234.ts.net:100.101.102.103" # [!code ++]
+```
+
+## Restricting Access
+
+Everyone who can reach the Hub in your tailnet can open the login page. Use the [access control policy](https://tailscale.com/kb/1018/acls) of your tailnet to restrict access to the Hub to your admins and Agents, for example with tags:
+
+```json title="Tailnet policy file" lineNumbers
+{
+	"tagOwners": {
+		"tag:orca-hub": ["autogroup:admin"],
+		"tag:orca-agent": ["autogroup:admin"]
+	},
+	"grants": [
+		{
+			"src": ["autogroup:admin", "tag:orca-agent"],
+			"dst": ["tag:orca-hub"],
+			"ip": ["tcp:443"]
+		}
+	]
+}
+```
+
+Additionally, you can restrict the Hub to Tailscale IP addresses with `ALLOWED_IPS`:
+
+```bash title=".env"
+ALLOWED_IPS=100.64.0.0/10,fd7a:115c:a1e0::/48
+```
+
+## Webhooks and GitHub Actions
+
+Git providers, container registries and GitHub Actions can't reach a Hub that is only available in your tailnet. You can either rely on [polling](/docs/advanced/architecture/repositories#sync-strategies), or make the Hub publicly reachable with [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) instead of Tailscale Serve:
+
+```bash
+sudo tailscale funnel --bg 8080
+```
+
+For the [sidecar container](#tailscale-as-a-sidecar-container), enable Funnel in `tailscale/serve.json` instead:
+
+```json title="tailscale/serve.json"
+{
+	"AllowFunnel": { // [!code ++]
+		"${TS_CERT_DOMAIN}:443": true // [!code ++]
+	}, // [!code ++]
+	"TCP": { ... },
+	"Web": { ... }
+}
+```
+
+With Funnel the whole Hub is public. Restrict the UI and API to your tailnet with `ALLOWED_IPS`, as shown above. `ALLOWED_IPS` does not apply to webhooks, GitHub Actions, the health check and Agent connections, so they keep working from the internet. Tailscale passes the real IP of public clients to the Hub, so they are blocked by `ALLOWED_IPS` and rate limiting works as expected.
+
+<Callout type="warn">
+	Only use Funnel together with `ALLOWED_IPS` and follow the other recommendations on the [security
+	page](/docs/advanced/security), as the Hub is exposed to the internet.
+</Callout>
+
+## Services in your Tailnet
+
+The Hub blocks requests to private IP addresses, including the Tailscale range `100.64.0.0/10`, to prevent [SSRF attacks](/docs/advanced/security#outbound-requests-ssrf-protection). If your Git server, OIDC provider or notification service is only reachable in your tailnet, allow its Tailscale IP with `ALLOWED_INTERNAL_IPS`:
+
+```bash title=".env"
+ALLOWED_INTERNAL_IPS=100.101.102.104
+```
+
+Allow single IPs rather than the whole tailnet range.
+
+This requires that the Hub can reach the tailnet. With Tailscale on the host this works out of the box. The sidecar container uses userspace networking by default, which only handles incoming connections. To make outgoing connections work, switch it to kernel networking:
+
+```yml title="docker-compose.yml"
+services:
+  tailscale:
+    environment:
+      - TS_USERSPACE=false # [!code ++]
+    devices: # [!code ++]
+      - /dev/net/tun:/dev/net/tun # [!code ++]
+    cap_add: # [!code ++]
+      - net_admin # [!code ++]
+```

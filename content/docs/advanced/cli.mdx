@@ -13,6 +13,8 @@ When using Docker, prefix commands with:
 docker compose exec hub /app/hub <command>
 ```
 
+Use `docker compose exec` while the Hub is running. Commands that require a stopped Hub (`import` and `key rotate`) are executed with `docker compose run --rm hub <command>` instead. The image entrypoint is already `/app/hub`, so the binary path must not be repeated there.
+
 <Callout>
 	Most commands do not require an interactive terminal. For commands that require confirmation
 	`--yes`/`-y` can be used as CLI flag to confirm dangerous operations.
@@ -30,21 +32,23 @@ hub export [--output <path>]
 | ---------------- | ------------------------------- | ------------------------------- |
 | `-o`, `--output` | `hub-export-YYYYMMDD-HHMMSS.db` | Output path for the backup file |
 
+Relative paths are resolved inside the `data/` directory, absolute paths are used as given. The command refuses to overwrite an existing file.
+
 **Usage with Docker:**
 
 ```bash
 docker compose exec hub /app/hub export
 ```
 
-The file is created inside the container under `/app/data/`. Copy it out of the container to include it in your backup strategy:
+The file is created inside the container under `/app/data/`, which is mounted to `./data/hub/` on the host with the default `docker-compose.yml`. Copy it from there to include it in your backup strategy:
 
 ```bash
-docker compose cp hub:/app/data/hub-export-*.db ./backups/
+cp ./data/hub/hub-export-*.db ./backups/
 ```
 
 ### import
 
-Restores a database from a backup file. The existing database is copied to a rollback file before the restore, so you can recover if something goes wrong.
+Restores a database from a backup file. The existing database is copied to a rollback file (`<database>-restore-<timestamp>.bak`) before the restore, so you can recover if something goes wrong. Backups created by a newer OrcaCD version are rejected.
 
 <Callout type="warn">
 	The Hub server must be **stopped** before running import. All existing data is overridden by the
@@ -63,14 +67,14 @@ hub import <file> [--yes]
 **Usage with Docker:**
 
 ```bash
-# Copy the backup into the container
-docker compose cp ./backups/hub-export-20240101-120000.db hub:/app/data/
+# Copy the backup into the data directory of the hub
+cp ./backups/hub-export-20240101-120000.db ./data/hub/
 
 # Stop the hub
 docker compose stop hub
 
 # Run import
-docker compose run --rm hub /app/hub import data/hub-export-20240101-120000.db
+docker compose run --rm hub import data/hub-export-20240101-120000.db
 
 # Restart the hub
 docker compose up -d hub
@@ -106,22 +110,38 @@ docker compose stop hub
 # 3. Rotate the key (set the NEW APP_SECRET in .env first)
 docker compose run --rm \
   -e OLD_APP_SECRET=<old-secret> \
-  hub /app/hub key rotate
+  hub key rotate
 
 # 4. Restart the hub with the new APP_SECRET
 docker compose up -d hub
 ```
 
-After a successful rotation, all agent tokens and user sessions signed with the old secret are invalidated. Users need to log in again and agents need their tokens re-issued).
+After a successful rotation, all agent tokens and user sessions signed with the old secret are invalidated. Users need to log in again and agents need their tokens re-issued.
 
 ### reset-password
 
 Resets a user's password and forces them to change it on the next login. See [Account Recovery](/docs/troubleshooting/account-recovery) for full details.
 
 ```bash
-hub reset-password <user-id-or-email>
+hub reset-password --email <email>
+hub reset-password --id <user-id>
 ```
+
+| Flag      | Description               |
+| --------- | ------------------------- |
+| `--email` | Email address of the user |
+| `--id`    | ID of the user            |
+
+Exactly one of `--email` or `--id` must be provided. Users that only log in via SSO can not be reset.
+
+### version
+
+Prints the version of the Hub. Also available as `--version`/`-v`.
+
+### healthcheck
+
+Checks whether the Hub is running and healthy. This is used by the Docker healthcheck of the image.
 
 ## Agent
 
-The Agent CLI does not currently provide any helpful commands for end users.
+The Agent CLI only provides the `version` and `healthcheck` commands. The `healthcheck` command is used by the Docker healthcheck of the image and reports the Agent as healthy once it is connected to the Hub.

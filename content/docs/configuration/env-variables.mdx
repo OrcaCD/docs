@@ -3,8 +3,7 @@ title: Environment Variables
 description: Complete reference for all OrcaCD configuration options
 ---
 
-Below are all the environment variables supported by OrcaCD. These should be configured in your `.env` file.
-Be cautious when modifying environment variables that are not recommended to change.
+With the default `docker-compose.yml`, the Hub reads its variables from `.env` and the Agent from `agent.env`.
 
 Each variable is tagged with a **Type**:
 
@@ -17,31 +16,39 @@ Each variable is tagged with a **Type**:
 
 These environment variables can be used in both the agent and the hub.
 
-| Variable    | Default Value | Type                                   | Description                                                |
-| ----------- | ------------- | -------------------------------------- | ---------------------------------------------------------- |
-| `LOG_LEVEL` | `info `       | <Badge variant="gray">Optional</Badge> | Log level. Options: trace, debug, info, warn, error, fatal |
-| `LOG_JSON`  | `false`       | <Badge variant="gray">Optional</Badge> | Enable JSON formatted logs.                                |
+| Variable    | Default Value | Type                                   | Description                                                                                          |
+| ----------- | ------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `LOG_LEVEL` | `info`        | <Badge variant="gray">Optional</Badge> | Log level: `trace`, `debug`, `info`, `warn`, `error` or `fatal`. The setup code is logged as `warn`. |
+| `LOG_JSON`  | `false`       | <Badge variant="gray">Optional</Badge> | Log in JSON format.                                                                                  |
 
 ## Hub
 
-| Variable               | Default Value | Type                                       | Description                                                                                                                                                             |
-| ---------------------- | ------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `APP_URL`              | `-`           | <Badge variant="red">Required</Badge>      | The URL of the OrcaCD instance                                                                                                                                          |
-| `APP_SECRET`           | `-`           | <Badge variant="red">Required</Badge>      | Secret used for authentication and encryption. Generate one with `openssl rand -base64 42`                                                                              |
-| `TRUSTED_PROXIES`      | `-`           | <Badge variant="amber">Recommended</Badge> | Recommended if using a reverse proxy. Comma seperated list of network origins                                                                                           |
-| `DISABLE_LOCAL_AUTH`   | `false`       | <Badge variant="purple">Security</Badge>   | Disable password authentication. Useful when using SSO with OIDC                                                                                                        |
-| `ALLOWED_IPS`          | `-`           | <Badge variant="purple">Security</Badge>   | Harden the hub by only allowing requests from certain IPs. Comma seperated list of CIDR ranges or single IPs. This does not apply to webhooks or the agent connections. |
-| `HOST`                 | `0.0.0.0`     | <Badge variant="gray">Optional</Badge>     | Host address                                                                                                                                                            |
-| `PORT`                 | `8080`        | <Badge variant="gray">Optional</Badge>     | Container port                                                                                                                                                          |
-| `DISABLE_UI`           | `false`       | <Badge variant="gray">Optional</Badge>     | Disable serving the frontend. Useful when using the hub only for API access.                                                                                            |
-| `ALLOWED_INTERNAL_IPS` | `-`           | <Badge variant="gray">Optional</Badge>     | Private IPs that should be ignored by the SSRF protection. Comma seperated list of CIDR ranges or single IPs                                                            |
-| `DEMO`                 | `false`       | <Badge variant="gray">Optional</Badge>     | This mode disables all functions except the login and additionally seeds some demo data in the database                                                                 |
+| Variable               | Default Value | Type                                       | Description                                                                                                                                                                                 |
+| ---------------------- | ------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `APP_URL`              | `-`           | <Badge variant="red">Required</Badge>      | Public URL of the Hub, e.g. `https://orcacd.example.com`, without a path. Must match the URL in the browser. Login requires HTTPS, except on `localhost`.                                   |
+| `APP_SECRET`           | `-`           | <Badge variant="red">Required</Badge>      | Secret for authentication and database encryption, at least 32 characters. Generate one with `openssl rand -base64 42`. See [`hub key rotate`](/docs/advanced/cli#key-rotate) to change it. |
+| `TRUSTED_PROXIES`      | `-`           | <Badge variant="amber">Recommended</Badge> | Comma separated IPs or CIDR ranges of your reverse proxies.                                                                                                                                 |
+| `DISABLE_LOCAL_AUTH`   | `false`       | <Badge variant="purple">Security</Badge>   | Disable password login, e.g. when using [OIDC](/docs/guides/oidc).                                                                                                                          |
+| `ALLOWED_IPS`          | `-`           | <Badge variant="purple">Security</Badge>   | Comma separated IPs or CIDR ranges that can access the Hub. Webhooks, GitHub Actions, the health check and Agent connections are always allowed.                                            |
+| `HOST`                 | `-`           | <Badge variant="gray">Optional</Badge>     | Address the Hub listens on. Defaults to all interfaces.                                                                                                                                     |
+| `PORT`                 | `8080`        | <Badge variant="gray">Optional</Badge>     | Port the Hub listens on.                                                                                                                                                                    |
+| `DISABLE_UI`           | `false`       | <Badge variant="gray">Optional</Badge>     | Don't serve the web UI, e.g. for API-only use.                                                                                                                                              |
+| `ALLOWED_INTERNAL_IPS` | `-`           | <Badge variant="gray">Optional</Badge>     | Comma separated private IPs or CIDR ranges the Hub may connect to, e.g. a self-hosted Git server or OIDC provider.                                                                          |
+| `DEMO`                 | `false`       | <Badge variant="gray">Optional</Badge>     | Demo mode: seeds demo data and disables everything except the login.                                                                                                                        |
 
 ## Agent
 
-| Variable                              | Default Value | Type                                     | Description                                                                                                            |
-| ------------------------------------- | ------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `HUB_URL`                             | `-`           | <Badge variant="red">Required</Badge>    | The URL of the Hub. Example: `https://example.com`                                                                     |
-| `AUTH_TOKEN`                          | `- `          | <Badge variant="red">Required</Badge>    | The authentication token of the agent. Register an agent in the hub frontend to retrieve it                            |
-| `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR` | `false`       | <Badge variant="purple">Security</Badge> | Restrict the volumes that can be mounted to locations within the OrcaCD deployments directory. This enhances security. |
-| `ALLOWED_PRIVILEGED_APPS`             | `-`           | <Badge variant="gray">Optional</Badge>   | Comma seperated list of app id that are allowed to bypass certain restrictions enforced by OrcaCD                      |
+<Callout type="warn">
+	Deployed Compose files can read the Agent's environment. Never give the Agent the `.env` file of
+	the Hub.
+</Callout>
+
+| Variable                              | Default Value  | Type                                     | Description                                                                                                                                           |
+| ------------------------------------- | -------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `HUB_URL`                             | `-`            | <Badge variant="red">Required</Badge>    | URL of the Hub, usually the same as `APP_URL`.                                                                                                        |
+| `AUTH_TOKEN`                          | `-`            | <Badge variant="red">Required</Badge>    | Token of the Agent, created when you add the Agent in the Hub.                                                                                        |
+| `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR` | `false`        | <Badge variant="purple">Security</Badge> | Only allow host paths inside the deployment directory of the application. See [deployment policy](/docs/advanced/security#compose-deployment-policy). |
+| `ALLOWED_PRIVILEGED_APPS`             | `-`            | <Badge variant="gray">Optional</Badge>   | Comma separated application IDs that skip the [deployment policy](/docs/advanced/security#compose-deployment-policy) entirely.                        |
+| `CA_CERT_FILE`                        | `-`            | <Badge variant="gray">Optional</Badge>   | Path to a PEM CA certificate inside the Agent container, for Hubs with a self-signed or private CA certificate.                                       |
+| `HEALTHCHECK_PORT`                    | `8090`         | <Badge variant="gray">Optional</Badge>   | Port of the internal health check endpoint on `127.0.0.1`.                                                                                            |
+| `DEPLOYMENTS_DIR`                     | `/deployments` | <Badge variant="gray">Optional</Badge>   | Directory inside the Agent container where deployments are stored. Must be mounted from the host.                                                     |

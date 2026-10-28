@@ -1,9 +1,9 @@
 ---
 title: Notifications
-description: Setting up deployment notifications in OrcaCD
+description: Setting up notifications for applications, agents and repositories in OrcaCD
 ---
 
-OrcaCD can send notifications when a deployment succeeds or fails. Notifications can be scoped to specific applications or applied globally.
+OrcaCD can send notifications when something happens to your applications, agents or repositories, for example when a deployment fails, an application becomes unhealthy or an agent goes offline. Each notification selects the events it should be sent for and the resources it covers.
 
 ## Supported Providers
 
@@ -15,76 +15,98 @@ OrcaCD can send notifications when a deployment succeeds or fails. Notifications
 - Generic Webhook
 - Custom (Shoutrrr)
 
+## Events
+
+There are 11 events across three resource types. A notification only fires for an event if the event is selected **and** the resource it happened to is covered by the notification (see [Notification Scope](#notification-scope)).
+
+### Application Events
+
+| Event                           | Fires when                                                                                                                                                                                                            | Example message                                  |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| **Deployment succeeded**        | The agent reports that a deployment was applied successfully.                                                                                                                                                         | `Success: deployment succeeded for my-app`       |
+| **Deployment failed**           | The agent reports that a deployment failed.                                                                                                                                                                           | `Error: deployment failed for my-app`            |
+| **Image update succeeded**      | Image polling pulled new images for the application, or an explicitly triggered image update (registry webhook, manual or GitHub Action) finished. Periodic polls that find no new images stay silent.                | `Success: image update succeeded for my-app`     |
+| **Image update failed**         | Pulling the application's images failed, both for periodic image polling and for explicitly triggered image updates.                                                                                                  | `Error: image update failed for my-app`          |
+| **Sync failed**                 | The hub detected a new commit but couldn't hand the deployment to the agent, for example because the Compose file couldn't be fetched from the repository or the agent is not connected.                              | `Error: sync failed for my-app`                  |
+| **Became unhealthy or stopped** | The application was **healthy** and is now reported as unhealthy or stopped. It does not fire when the previous health was unknown (for example right after an agent reconnects) or while the application is syncing. | `Application my-app is unhealthy` / `is stopped` |
+| **Healthy again**               | The application was unhealthy or stopped and is now reported as healthy again.                                                                                                                                        | `Application my-app is healthy again`            |
+
+### Agent Events
+
+| Event                             | Fires when                                                                                                                       | Example message                 |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| **Went offline (after 1 minute)** | The agent has been disconnected for 60 seconds. Shorter interruptions, such as agent restarts or network blips, stay silent.     | `Agent my-agent is offline`     |
+| **Back online**                   | The agent reconnects after an offline notification was sent for it. Reconnects without a prior offline notification stay silent. | `Agent my-agent is back online` |
+
+<Callout>
+	The hub keeps track of which agents were reported offline in memory only. After a hub restart, no
+	**Back online** notification is sent for agents that were reported offline before the restart.
+</Callout>
+
+### Repository Events
+
+| Event              | Fires when                                                                                                                               | Example message                                              |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **Sync failed**    | A repository sync fails after the previous sync succeeded. Repeated failures (for example on every polling interval) don't notify again. | `Error: sync failed for repository my-repo: <error details>` |
+| **Sync recovered** | A repository sync succeeds after the previous sync failed.                                                                               | `Success: sync recovered for repository my-repo`             |
+
 ## Creating a Notification
 
-1. Navigate to **Notifications** and click **Add Notification**.
-2. Choose a provider type and enter a name.
-3. Fill in the provider-specific configuration (see below).
-4. Optionally link the notification to specific applications.
-5. Save.
+Navigate to **Notifications**, click **Add Notification** and follow the dialog. In the events step, all events are preselected but no resources are, so pick resources or turn on the "All ..." switch in every tab you want notifications for (see [Notification Scope](#notification-scope)).
 
-Use the **Test** button to send a test message and verify that the configuration is correct.
+Before saving, the hub sends a test notification with the entered configuration. The notification is only saved if the test message was delivered. Otherwise, the error is shown in the dialog and nothing is saved.
+
+## Managing Notifications
+
+After creation, only **Enabled**, the selected events and the scope can be edited. To change the name, type or provider configuration, delete the notification and create a new one. **Send Test** in the row menu also works for disabled notifications.
+
+The **Status** column shows the result of the last delivery attempt. Delivery errors are logged by the hub. Credentials are removed from error messages: URLs are reduced to their scheme and host, so webhook tokens, passwords and API keys are not exposed.
+
+## Notification Scope
+
+The events and the covered resources are selected per resource type in the **Applications**, **Agents** and **Repositories** tabs. Either turn on the "All ..." switch to cover every resource of that type, including ones created later, or select individual resources.
+
+When the "All" switch is on, any individually selected resources of that type are discarded on save. If you turn the switch off again later, you need to select the resources again.
+
+A notification is sent when the notification is enabled, the event is selected, and the affected resource is covered by the switch or the picker of the matching tab. For example, a notification with **Deployment failed** selected and **All Applications** turned on, but no agent events selected, only reports failed deployments.
+
+![Notification events and scope](/assets/docs/create-notification.png?url)
+
+You can combine notifications: use one notification with the "All" switches for a global channel, and add separate notifications that cover only specific resources for channels that should only receive specific alerts.
+
+<Callout title="Upgrading from an earlier version" type="warn">
+	Existing notifications are migrated with the events that were sent before events became
+	selectable: deployment succeeded/failed, image update succeeded/failed and application sync
+	failed. Health, agent and repository events are **not** enabled automatically. **Enable by
+	Default** was replaced by **All Applications**, which is only turned on if the notification was
+	linked to every existing application. Otherwise, the notification keeps its linked applications.
+	Review your notifications after upgrading.
+</Callout>
+
+## Network Access
+
+All notification traffic goes through OrcaCD's SSRF protection, including SMTP connections. Connections to private, loopback and link-local addresses are blocked. If you run a self-hosted target on a private IP, for example a Gotify server, an SMTP relay or a webhook receiver in your local network, add its IP or CIDR range to [`ALLOWED_INTERNAL_IPS`](/docs/configuration/env-variables).
 
 ## Provider Configuration
 
-### Discord
+Most providers only need a webhook URL or the server and credentials of the service. Some notes:
 
-Fill in these fields in the notification form:
+- **Discord**: Copy the webhook URL under **Server Settings → Integrations → Webhooks**.
+- **Slack**: Create an [Incoming Webhook](https://api.slack.com/messaging/webhooks). Only `https://hooks.slack.com/services/...` URLs are accepted. The bot name and icon are configured in your Slack app.
+- **Microsoft Teams**: Create an [Incoming Webhook connector](https://support.microsoft.com/en-US/Workflows/send-messages-in-teams-using-incoming-webhooks) in your channel. The URL must use `https`.
+- **Gotify**: Create an application token under **Apps** in the Gotify UI.
+- **Email (SMTP)**: Enter the host without scheme or port. **Use TLS** enables STARTTLS and is on by default. Multiple recipients can be separated by commas or new lines.
+- **Generic Webhook**: Sends a `POST` request with `Content-Type: application/json` and the notification text in the `message` field. Additional headers are entered one per line as `Header-Name: value`.
 
-| Field           | Required | Description                                                                                                                                 |
-| --------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Webhook URL** | yes      | Full webhook URL, copied from your Discord server under **Server Settings → Integrations → Webhooks → (select webhook) → Copy Webhook URL** |
-| **Bot Name**    | no       | Override the bot display name                                                                                                               |
-| **Avatar URL**  | no       | Override the bot avatar URL                                                                                                                 |
-| **Thread ID**   | no       | Send to a specific thread                                                                                                                   |
-
-### Gotify
-
-| Field           | Required | Description                                                |
-| --------------- | -------- | ---------------------------------------------------------- |
-| **Server URL**  | yes      | Full URL of your Gotify instance (http or https)           |
-| **App Token**   | yes      | Application token, created in the Gotify UI under **Apps** |
-| **Priority**    | yes      | Message priority, between -2 and 10 (suggested default: 5) |
-| **Custom Path** | no       | Custom path prefix if Gotify is behind a sub-path proxy    |
-
-### Slack
-
-| Field           | Required | Description                                                                                                           |
-| --------------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Webhook URL** | yes      | Create an [Incoming Webhook](https://api.slack.com/messaging/webhooks) in your Slack workspace and paste its URL here |
-
-### Email (SMTP)
-
-| Field            | Required | Description                                     |
-| ---------------- | -------- | ----------------------------------------------- |
-| **SMTP Host**    | yes      | SMTP server hostname (no scheme or port)        |
-| **SMTP Port**    | yes      | SMTP port (e.g., 587 for STARTTLS, 465 for TLS) |
-| **From Address** | yes      | Sender email address                            |
-| **To Addresses** | yes      | Recipient email addresses, one per line         |
-| **Username**     | no       | SMTP authentication username                    |
-| **Password**     | no       | SMTP authentication password                    |
-| **From Name**    | no       | Sender display name                             |
-| **Use TLS**      | no       | Use STARTTLS (default: on)                      |
-
-### Microsoft Teams
-
-| Field           | Required | Description                                                                                                                                                                       |
-| --------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Webhook URL** | yes      | Create an [Incoming Webhook connector](https://support.microsoft.com/en-US/Workflows/send-messages-in-teams-using-incoming-webhooks) in your Teams channel and paste its URL here |
-| **Title**       | no       | Custom message title                                                                                                                                                              |
-
-### Generic Webhook
-
-Sends a JSON POST request to any HTTP/HTTPS endpoint.
-
-| Field           | Required | Description                                                           |
-| --------------- | -------- | --------------------------------------------------------------------- |
-| **Webhook URL** | yes      | Target URL (http or https)                                            |
-| **Headers**     | no       | Additional HTTP request headers, one per line as `Header-Name: value` |
+```json title="Generic Webhook body"
+{
+	"message": "Error: deployment failed for my-app"
+}
+```
 
 ### Custom (Shoutrrr)
 
-For any service supported by [Shoutrrr](https://shoutrrr.nickfedor.com/) that doesn't have a dedicated provider, enter the raw Shoutrrr URL directly.
+For any service supported by [Shoutrrr](https://shoutrrr.nickfedor.com/) that doesn't have a dedicated provider, enter the raw Shoutrrr URL directly. The URL must use a Shoutrrr service scheme, not `http` or `https`.
 
 ```
 pushover://token@user
@@ -92,15 +114,3 @@ ntfy://topic@ntfy.sh
 ```
 
 Refer to the [Shoutrrr documentation](https://shoutrrr.nickfedor.com/) for the URL format of each service.
-
-## Notification Scope
-
-### Enable by Default
-
-When **Enable by Default** is on, the notification is sent for all applications. Including ones created in the future, unless explicitly unlinked.
-
-### Per-Application
-
-When **Enable by Default** is off, the notification is only sent for the applications listed in the **Applications** field.
-
-You can mix both approaches: use "enable by default" for a global notification channel, and add separate per-application notifications for channels that should only receive specific alerts.

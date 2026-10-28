@@ -5,13 +5,24 @@ description: Steps to recover your account if you have lost access
 
 There are two ways to reset a password for a user:
 
-1. UI: An admin can reset the password for a user in the admin panel under the "Users" tab by clicking on the three dots next to the user's name and selecting "Edit".
-2. Terminal: You can reset a password for a user by running `hub reset-password <user id or email>`. To execute this script with Docker you have to run the following command:
+1. UI: An admin can reset the password for a user in the admin panel under the "User Management" tab by clicking on the three dots next to the user's name and selecting "Edit".
+2. Terminal: You can reset a password for a user by running `hub reset-password --email <email>` or `hub reset-password --id <user-id>`. To execute this command with Docker you have to run the following command:
 
 ```bash
-docker compose exec hub /app/hub reset-password <user id or email>
+docker compose exec hub /app/hub reset-password --email <email>
 ```
 
-<Callout>The user with the reset password has to change the password on the next login.</Callout>
+<Callout>
+	The user with the reset password has to change the password on the next login. Resetting a
+	password also signs the user out on all devices.
+</Callout>
+
+<Callout type="warn">
+	Passwords can only be reset for users with a local account. Users that only log in via SSO have to
+	recover their account at the identity provider. If `DISABLE_LOCAL_AUTH=true` is set, password
+	login is disabled and a reset password can not be used until the variable is removed.
+</Callout>
+
+If no user exists yet and you lost the setup code for the first admin account, restart the Hub. A new setup code is printed to the logs on every start (`docker compose logs hub`).
 
 <AccountRecoveryTerminal />

@@ -52,51 +52,19 @@ There are 11 events across three resource types. A notification only fires for a
 
 ## Creating a Notification
 
-Navigate to **Notifications** and click **Add Notification**. The dialog guides you through three steps.
+Navigate to **Notifications**, click **Add Notification** and follow the dialog. In the events step, all events are preselected but no resources are, so pick resources or turn on the "All ..." switch in every tab you want notifications for (see [Notification Scope](#notification-scope)).
 
-### General [step]
-
-Enter a **Name** and choose the provider **Type**. The **Enabled** toggle is on by default; disabled notifications are never sent for events.
-
-### Events [step]
-
-Select the events and the resources the notification covers in the **Applications**, **Agents** and **Repositories** tabs (see [Notification Scope](#notification-scope)). All events are preselected, but no resources are, so make sure to pick resources or turn on the "All ..." switch for every tab you want notifications for. At least one event is required.
-
-### Provider [step]
-
-Fill in the provider-specific configuration (see [Provider Configuration](#provider-configuration)) and click **Add Notification**.
-
-Before saving, the hub sends a test notification with the entered configuration. The notification is only saved if the test message was delivered. Otherwise, the error is shown in the dialog and nothing is saved. Via the API, an invalid configuration returns `400 Bad Request` and a delivery failure returns `502 Bad Gateway`.
+Before saving, the hub sends a test notification with the entered configuration. The notification is only saved if the test message was delivered. Otherwise, the error is shown in the dialog and nothing is saved.
 
 ## Managing Notifications
 
-The notifications table shows the provider type, whether the notification is enabled and the covered applications. The row menu offers these actions:
+After creation, only **Enabled**, the selected events and the scope can be edited. To change the name, type or provider configuration, delete the notification and create a new one. **Send Test** in the row menu also works for disabled notifications.
 
-- **Edit** opens the **Enabled** toggle and the events and scope settings.
-- **Send Test** sends the message `This is a test notification from OrcaCD.` to the configured provider and shows the result. This works for disabled notifications too.
-- **Delete** removes the notification.
-
-Only **Enabled**, the selected events and the scope can be edited. The name, type and provider configuration can't be changed after creation. To change them, delete the notification and create a new one.
-
-### Status
-
-The **Status** column shows the result of the last delivery attempt, whether it was triggered by an event or by **Send Test**:
-
-| Status      | Meaning                                           |
-| ----------- | ------------------------------------------------- |
-| **Success** | The last notification was delivered.              |
-| **Error**   | The last notification failed. Check the hub logs. |
-| **Unknown** | No delivery result has been recorded yet.         |
-
-Delivery errors are logged by the hub and shown in the UI for test notifications. Credentials are removed from these error messages: URLs are reduced to their scheme and host, so webhook tokens, passwords and API keys are not exposed.
+The **Status** column shows the result of the last delivery attempt. Delivery errors are logged by the hub. Credentials are removed from error messages: URLs are reduced to their scheme and host, so webhook tokens, passwords and API keys are not exposed.
 
 ## Notification Scope
 
-The events step and the edit dialog have three tabs: **Applications**, **Agents** and **Repositories**. Each tab contains:
-
-- **Event checkboxes** for the events of that resource type. The tab label shows how many of its events are selected.
-- **An "All Applications" / "All Agents" / "All Repositories" switch.** When on, the notification covers every resource of that type, including ones created later.
-- **A resource picker**, shown when the switch is off. Only the selected resources are covered.
+The events and the covered resources are selected per resource type in the **Applications**, **Agents** and **Repositories** tabs. Either turn on the "All ..." switch to cover every resource of that type, including ones created later, or select individual resources.
 
 When the "All" switch is on, any individually selected resources of that type are discarded on save. If you turn the switch off again later, you need to select the resources again.
 
@@ -121,66 +89,16 @@ All notification traffic goes through OrcaCD's SSRF protection, including SMTP c
 
 ## Provider Configuration
 
-### Discord
+Most providers only need a webhook URL or the server and credentials of the service. Some notes:
 
-Fill in these fields in the notification form:
+- **Discord**: Copy the webhook URL under **Server Settings → Integrations → Webhooks**.
+- **Slack**: Create an [Incoming Webhook](https://api.slack.com/messaging/webhooks). Only `https://hooks.slack.com/services/...` URLs are accepted. The bot name and icon are configured in your Slack app.
+- **Microsoft Teams**: Create an [Incoming Webhook connector](https://support.microsoft.com/en-US/Workflows/send-messages-in-teams-using-incoming-webhooks) in your channel. The URL must use `https`.
+- **Gotify**: Create an application token under **Apps** in the Gotify UI.
+- **Email (SMTP)**: Enter the host without scheme or port. **Use TLS** enables STARTTLS and is on by default. Multiple recipients can be separated by commas or new lines.
+- **Generic Webhook**: Sends a `POST` request with `Content-Type: application/json` and the notification text in the `message` field. Additional headers are entered one per line as `Header-Name: value`.
 
-| Field           | Required | Description                                                                                                                                 |
-| --------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Webhook URL** | yes      | Full webhook URL, copied from your Discord server under **Server Settings → Integrations → Webhooks → (select webhook) → Copy Webhook URL** |
-| **Bot Name**    | no       | Override the bot display name                                                                                                               |
-| **Avatar URL**  | no       | Override the bot avatar URL                                                                                                                 |
-| **Thread ID**   | no       | Send to a specific thread                                                                                                                   |
-
-### Gotify
-
-| Field           | Required | Description                                                |
-| --------------- | -------- | ---------------------------------------------------------- |
-| **Server URL**  | yes      | Full URL of your Gotify instance (http or https)           |
-| **App Token**   | yes      | Application token, created in the Gotify UI under **Apps** |
-| **Priority**    | yes      | Message priority, between -2 and 10 (default: 5)           |
-| **Custom Path** | no       | Custom path prefix if Gotify is behind a sub-path proxy    |
-
-### Slack
-
-| Field           | Required | Description                                                                                                                                                                          |
-| --------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Webhook URL** | yes      | Create an [Incoming Webhook](https://api.slack.com/messaging/webhooks) in your Slack workspace and paste its URL here. Only `https://hooks.slack.com/services/...` URLs are accepted |
-
-The bot name and icon can be configured in your Slack app settings.
-
-### Email (SMTP)
-
-| Field             | Required | Description                                                |
-| ----------------- | -------- | ---------------------------------------------------------- |
-| **SMTP Host**     | yes      | SMTP server hostname or IP address (no scheme or port)     |
-| **SMTP Port**     | yes      | SMTP port (e.g., 587 for STARTTLS, 465 for TLS)            |
-| **SMTP Username** | no       | SMTP authentication username                               |
-| **Password**      | no       | SMTP authentication password (requires a username)         |
-| **From Address**  | yes      | Sender email address                                       |
-| **From Name**     | no       | Sender display name                                        |
-| **To Addresses**  | yes      | Recipient email addresses, one per line or comma-separated |
-| **Use TLS**       | no       | Use STARTTLS (default: on)                                 |
-
-### Microsoft Teams
-
-| Field           | Required | Description                                                                                                                                                                                         |
-| --------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Webhook URL** | yes      | Create an [Incoming Webhook connector](https://support.microsoft.com/en-US/Workflows/send-messages-in-teams-using-incoming-webhooks) in your Teams channel and paste its URL here. Must use `https` |
-| **Title**       | no       | Custom message title                                                                                                                                                                                |
-
-### Generic Webhook
-
-Sends a `POST` request with a JSON body to any HTTP/HTTPS endpoint.
-
-| Field           | Required | Description                                                           |
-| --------------- | -------- | --------------------------------------------------------------------- |
-| **Webhook URL** | yes      | Target URL (http or https)                                            |
-| **Headers**     | no       | Additional HTTP request headers, one per line as `Header-Name: value` |
-
-The request is sent with `Content-Type: application/json` and contains the notification text in the `message` field:
-
-```json
+```json title="Generic Webhook body"
 {
 	"message": "Error: deployment failed for my-app"
 }

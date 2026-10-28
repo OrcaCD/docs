@@ -13,22 +13,7 @@ The **Overview** page shows the status of all applications, recent deployments a
 
 ## Creating an Application
 
-1. Navigate to the **Applications** page and click **New Application**.
-2. The **Add Application** dialog guides you through three steps:
-
-   | Step          | Field                    | Description                                                                                                                              |
-   | ------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-   | Details       | **Name**                 | Display name of the application. Must be unique per agent. The Docker Compose project name is derived from it                            |
-   |               | **Icon**                 | Icon shown in the UI                                                                                                                     |
-   |               | **Agent**                | The agent that will run the deployment                                                                                                   |
-   |               | **Delete old images**    | Remove replaced images after a deployment (see [Delete old images](#delete-old-images))                                                  |
-   | Source        | **Repository**           | The repository containing the Compose file                                                                                               |
-   |               | **Branch**               | The branch to track (e.g., `main`, `production`)                                                                                         |
-   |               | **Compose File**         | Pick the Compose file from the file tree of the branch. The path must end with `.yml` or `.yaml` (e.g., `apps/myapp/docker-compose.yml`) |
-   | Image Polling | **Enable image polling** | Regularly check for new image versions (see [Image Polling](#image-polling))                                                             |
-   |               | **Polling interval**     | How often to check for new images. Minimum 60 seconds, default 120 seconds                                                               |
-
-3. Click **Add Application**.
+Navigate to the **Applications** page, click **New Application** and select the Agent, the repository, the branch and the Compose file. The name must be unique per Agent, because the Docker Compose project name is derived from it.
 
 OrcaCD reads the Compose file from the latest commit of the branch and immediately deploys it to the selected Agent.
 
@@ -116,10 +101,7 @@ When enabled, OrcaCD removes the images an application no longer uses after ever
 
 Image polling lets OrcaCD automatically pull updated Docker images and restart containers, even when the Compose file has not changed. This is useful for mutable tags like `latest` or for CI pipelines that push new images under the same tag.
 
-| Setting                  | Description                                                                 |
-| ------------------------ | --------------------------------------------------------------------------- |
-| **Enable image polling** | Turns image polling on or off                                               |
-| **Polling interval**     | How often to check for new images (minimum 60 seconds, default 120 seconds) |
+The polling interval is at least 60 seconds (default: 120 seconds).
 
 The Agent compares the images of the application with the registry. If any image changed, it pulls the images and redeploys the application.
 

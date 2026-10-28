@@ -21,11 +21,7 @@ OrcaCD does not clone the repository. It reads branches, the file tree, commits 
 
 ## Adding a Repository
 
-1. Navigate to the **Repositories** page and click **Add Repository**.
-2. **Provider**: Select the Git provider.
-3. **Repository**: Enter the repository URL (e.g., `https://github.com/your-org/your-repo`) and optionally an auth token. When you continue, OrcaCD tests the connection to the repository.
-4. **Sync type**: Choose a [sync strategy](#sync-strategies) and click **Connect Repository**.
-5. **Summary**: For the webhook sync type, OrcaCD shows the webhook URL and secret. Copy the secret, it is only shown once.
+Navigate to the **Repositories** page, click **Add Repository** and enter the repository URL (e.g., `https://github.com/your-org/your-repo`), an optional [auth token](#authentication) and the [sync strategy](#sync-strategies). OrcaCD tests the connection before the repository is added. For the webhook sync type, the webhook secret is shown at the end. Copy it, it is only shown once.
 
 ![Add Repository dialog](/assets/docs/create-repository.png?url)
 

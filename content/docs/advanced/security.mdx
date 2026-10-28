@@ -55,41 +55,6 @@ Webhooks return the same `401 Unauthorized` response for unknown IDs, wrong secr
 
 Requests the Hub sends to user-configured URLs, for example to Git providers, notification services and OIDC providers, are blocked if they connect to a private, loopback, link-local or otherwise reserved IP address. This is also checked for redirects, for hostnames that resolve to such an address and for IPv4 addresses embedded in NAT64 and 6to4 IPv6 addresses. If you run one of these services in your internal network, allow its IP or range with `ALLOWED_INTERNAL_IPS`.
 
-### Compose deployment policy
-
-Before an Agent deploys an application, it checks the Compose file and rejects options that can weaken container isolation or give access to the host. The check runs for every deployment, including redeploys after an image update. If a Compose file is rejected, the Agent keeps the previously deployed file.
-
-The following options are rejected for services and `pre_start` lifecycle hooks:
-
-- `privileged: true` and `use_api_socket`
-- `cap_add` with dangerous capabilities (`ALL`, `SYS_ADMIN`, `SYS_MODULE`, `SYS_PTRACE`, `SYS_RAWIO`, `SYS_BOOT`, `NET_ADMIN`, `BPF`, `PERFMON`, `DAC_READ_SEARCH`, `DAC_OVERRIDE`, `MAC_ADMIN`, `MAC_OVERRIDE`)
-- Shared namespaces: `host` or `container:<name>` as value of `network_mode`, `pid`, `ipc`, `uts`, `userns_mode` or `cgroup`. `service:<name>` is allowed.
-- `devices`, `device_cgroup_rules` and `volumes_from`
-- `security_opt` entries other than `no-new-privileges`
-- Host paths of bind mounts, `env_file` entries and top-level `secrets` and `configs` with a `file` source that point to sensitive host paths:
-  - `/`, `/etc`, `/boot`, `/root`, `/usr`, `/bin`, `/sbin`, `/lib`, `/lib64`, `/proc`, `/sys`, `/dev`, `/run`, `/var/run`, the Docker socket, `/var/lib/docker` and `/var/lib/containerd`, everything below them and their parent directories like `/var`
-  - `/home` and the home directories directly below it, as well as paths below `/home` that contain sensitive files or directories like `.ssh`, `.aws`, `.kube` or `.docker`
-  - Paths inside the deployments directory that belong to another application or pass through a symlink
-
-In addition, the Agent rejects:
-
-- Services with a `provider`, since Compose would run the provider as a program inside the Agent
-- `privileged: true` on `post_start` and `pre_stop` hooks
-- Top-level `jobs`
-- Top-level volumes with `driver_opts`
-
-Paths are normalized before the check, so spellings like `/./etc` or `/var/../etc` are rejected as well.
-
-With `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR=true`, the deny-list for host paths is replaced by an allow-list: they have to be located inside the deployment directory of the application.
-
-If an application really needs one of the rejected options, add its ID to `ALLOWED_PRIVILEGED_APPS` on the Agent.
-
-<Callout type="warn">
-	Applications in `ALLOWED_PRIVILEGED_APPS` skip **all** checks of the deployment policy, including
-	`RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR`. Anyone who can change their Compose file can potentially
-	take over the host.
-</Callout>
-
 ### Agent environment
 
 Compose files can read the environment of the Agent through variable interpolation (e.g. `${AUTH_TOKEN}`). To prevent applications from reading secrets this way, the Agent removes `AUTH_TOKEN` from its environment after startup. It also removes `APP_SECRET` and `OLD_APP_SECRET` of the Hub and logs a warning if it finds them, for example because Hub and Agent share the same `.env` file.

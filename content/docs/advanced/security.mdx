@@ -39,7 +39,6 @@ Sensitive database fields, such as repository credentials, webhook secrets, OIDC
 
 - The first admin account can only be created with a one-time setup code that is printed to the Hub logs. See [installation](/docs/setup/installation).
 - Passwords are hashed with Argon2id.
-- The session cookie is `Secure`, `HttpOnly` and `SameSite=Strict`.
 - The Hub checks every request against the database, so role changes and deleted users take effect immediately. Open live update connections are checked every 30 seconds.
 - Changing or resetting a password signs the user out on all other devices. Under **Settings → Security → Sessions**, users can end all of their sessions with **Sign out everywhere**. Disabling or deleting an OIDC provider ends the sessions of all users linked to it.
 - Requests that change data are only accepted if their `Origin` header matches `APP_URL` (CSRF protection). Webhooks and GitHub Actions are excluded, as they are authenticated by a secret or an OIDC token.
@@ -47,17 +46,6 @@ Sensitive database fields, such as repository credentials, webhook secrets, OIDC
 - OIDC logins use PKCE and a nonce. An SSO login is not linked to an account whose user changed the email address themselves, see [OIDC](/docs/guides/oidc#how-sso-users-are-handled).
 
 ![Sign out everywhere](/assets/docs/security-sessions.png?url)
-
-### Rate limiting
-
-Public endpoints are rate limited per client IP. IPv6 addresses are grouped by their `/64` prefix.
-
-| Endpoint                                               | Limit         | Burst |
-| ------------------------------------------------------ | ------------- | ----- |
-| Login, registration and setup code verification        | 10 per minute | 10    |
-| OIDC login and callback                                | 10 per minute | 5     |
-| Repository webhooks, image webhooks and GitHub Actions | 1 per second  | 10    |
-| Agent connections                                      | 20 per minute | 5     |
 
 ### Webhooks
 

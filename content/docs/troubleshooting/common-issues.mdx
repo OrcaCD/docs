@@ -55,6 +55,39 @@ The Agent received `APP_SECRET` or `OLD_APP_SECRET`, usually because it shares t
 3. Ensure the Agent has access to the Docker API (`use_api_socket: true` in the default `docker-compose.yml`).
 4. If the Compose file references private images, run `docker login` for the registry on the Agent host, as the user that starts the Agent, and recreate the Agent with `docker compose up -d agent`. With `use_api_socket`, Docker passes the registry credentials of that user to the Agent. The error `no credentials for <registry> found in the agent's Docker config` means that the Agent has no credentials for this registry.
 
+## Deployment fails with permission denied during symlink checks
+
+**Symptoms:** A deployment or redeployment fails with `could not be checked for symlinks` and `permission denied`, for example when a bind mount source is `/deployments/my-app/data/app`.
+
+Application containers can create directories owned by their own UID or GID with restrictive permissions, such as `0700` or `0750`. The Agent must be able to search every parent directory to inspect the mount source. The default Agent configuration drops all Linux capabilities, so running as root alone does not bypass these permissions.
+
+The symlink checks prevent an application from creating a symlink in a writable bind mount and using it as a mount source on a later deployment to access paths outside its own directory. A path that cannot be inspected is rejected.
+
+**Solutions:**
+
+1. Prefer adjusting ownership, group membership or an ACL on the affected parent directories so the Agent can search them. Check every parent of the path named in the error and account for the UID and GID used by the application container. Avoid making application data world-readable or world-writable.
+2. If those permissions cannot be changed, explicitly add `DAC_READ_SEARCH` to the **Agent service's** Compose configuration. Merge this into the existing service, keeping its other settings:
+
+   ```yaml
+   services:
+     agent:
+       cap_drop:
+         - ALL
+       cap_add:
+         - DAC_READ_SEARCH
+   ```
+
+3. After changing the Agent's Compose configuration, recreate it with `docker compose up -d --force-recreate agent`, then retry the deployment. A plain restart does not apply capability changes.
+
+<Callout type="warn">
+	`DAC_READ_SEARCH` bypasses file read and directory read/search permissions for **all files
+	accessible to the Agent**, not just the deployments directory. It does not bypass write
+	permissions. This capability is disabled by default; enable it only if you accept that broader
+	read access. Symlink checks remain enabled.
+</Callout>
+
+Adding the application to `ALLOWED_PRIVILEGED_APPS` skips all deployment security policy checks. Prefer fixing directory access or explicitly granting the capability instead of bypassing the policy for this error.
+
 ## Repository sync fails with authentication error
 
 **Symptoms:** Sync status shows `failed` with an authentication error.

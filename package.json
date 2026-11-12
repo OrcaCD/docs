@@ -11,7 +11,8 @@
 		"postinstall": "fumadocs-mdx",
 		"lint": "oxlint --type-aware --deny-warnings",
 		"format": "oxfmt --write",
-		"format:check": "oxfmt --check"
+		"format:check": "oxfmt --check",
+		"test:e2e": "playwright test"
 	},
 	"dependencies": {
 		"@tanstack/react-router": "1.170.46",
@@ -33,6 +34,7 @@
 		"zbsearch": "^4.0.2"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.65.0",
 		"@tailwindcss/vite": "^4.3.4",
 		"@types/mdx": "^2.0.14",
 		"@types/node": "^26.6.6",

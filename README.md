@@ -25,6 +25,17 @@ pnpm install
 pnpm run dev
 ```
 
+### End-to-end tests
+
+The [Playwright](https://playwright.dev/) tests in `e2e/` run against the prerendered production build. Install the browser once, then run the tests:
+
+```bash
+pnpm exec playwright install chromium
+pnpm run test:e2e
+```
+
+Playwright builds the site and starts `vite preview` on port 4173 automatically. If a server is already running on that port, it is reused, so rebuild first when testing content changes.
+
 ### Structure
 
 The markdown files for the documentation are located in the `content/docs` folder.

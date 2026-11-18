@@ -19,6 +19,8 @@ import { getPageMarkdownUrl, source } from "@/lib/source";
 import { Suspense } from "react";
 import { AccountRecoveryTerminal } from "@/components/account-recovery-terminal";
 import { Badge } from "@/components/badge";
+import { Checklist, ChecklistItem } from "@/components/checklist";
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 import { ImageZoom } from "fumadocs-ui/components/image-zoom";
 
 export const Route = createFileRoute("/docs/$")({
@@ -81,7 +83,11 @@ const clientLoader = browserCollections.docs.createClientLoader({
 						components={{
 							...defaultMdxComponents,
 							AccountRecoveryTerminal,
+							Accordion,
+							Accordions,
 							Badge,
+							Checklist,
+							ChecklistItem,
 							img: (props) => <ImageZoom {...(props as any)} />,
 						}}
 					/>

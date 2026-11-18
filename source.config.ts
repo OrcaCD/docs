@@ -6,7 +6,7 @@ export const docs = defineDocs({
 	dir: "content/docs",
 	docs: {
 		postprocess: {
-			includeProcessedMarkdown: true,
+			includeProcessedMarkdown: { output: "function" },
 		},
 	},
 });

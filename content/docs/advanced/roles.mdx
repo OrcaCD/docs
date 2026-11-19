@@ -1,0 +1,39 @@
+---
+title: Roles & Permissions
+description: Control what users can see and do in OrcaCD
+---
+
+Every user has one or more roles, and each role grants a set of permissions. A user can do everything that any of their roles allows. Buttons for actions a user is not allowed to do are hidden in the UI, and users see their roles under **Settings → Profile**.
+
+![Roles page](/assets/docs/roles-page.png?url)
+
+## Built-in Roles
+
+- **Admin** can do everything, including the admin pages. Its permissions can't be changed.
+- **User** is given to new users. It starts with full access to all applications, repositories, agents and notifications, but you can restrict it.
+
+Built-in roles can't be deleted, and OrcaCD makes sure that at least one admin is left.
+
+## Custom Roles
+
+Create your own roles under **Admin → Roles** with **New role**. For each resource type (applications, repositories, agents and notifications), you choose the allowed actions, such as **View**, **Edit**, **Deploy** or **Roll back**. A permission can apply to all resources of a type, including ones created later, or only to specific resources. For example, a role can allow deploying only the applications of one team.
+
+The **API Tokens** permission allows users to create [API tokens](/docs/advanced/api-tokens). It is not part of the User role, so grant it explicitly to users who need tokens.
+
+## Assigning Roles
+
+Add members to a role in its **Members** tab, or edit a user in **Admin → User Management** and select their roles. Changes take effect immediately.
+
+## OIDC Group Mapping
+
+Roles can be assigned automatically based on the groups of your [OIDC provider](/docs/guides/oidc):
+
+### Set the groups claim [step]
+
+Edit the provider under **Admin → SSO Providers** and set **Groups claim** to the claim that contains the groups of the user, e.g. `groups`, or `realm_access.roles` for Keycloak.
+
+### Map groups to roles [step]
+
+Open a role, switch to the **Members** tab and add the provider and group name under **OIDC groups**. The group name has to match exactly, including case and a leading slash.
+
+Roles from groups are updated on every login: users get the role when they join the group and lose it when they leave it. Roles that were assigned by hand are not changed.

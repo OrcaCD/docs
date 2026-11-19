@@ -1,0 +1,37 @@
+---
+title: Passkeys
+description: Sign in to OrcaCD with passkeys instead of passwords
+---
+
+OrcaCD doesn't use passwords. Local accounts sign in with a [passkey](https://passkeys.dev), which can be stored on your device (e.g. Touch ID or Windows Hello), on a security key or in a password manager. Alternatively, users can sign in with an [OIDC provider](/docs/guides/oidc).
+
+<Callout type="warn">
+	Passkeys require that the Hub is reachable via HTTPS (`http://localhost` works for testing). They
+	are bound to the domain of `APP_URL`, so they stop working if you move the Hub to another domain.
+</Callout>
+
+## First Admin
+
+The first admin creates their account with the one-time setup code from the Hub logs, enters a name and an email address and creates a passkey. See [installation](/docs/setup/installation#create-an-admin-account).
+
+## Adding Users
+
+Admins add local users under **Admin → User Management**. OrcaCD then shows a single-use **enrollment code**, which you pass on to the user. The user clicks **Set up a passkey** on the login page, enters the code and creates their passkey. The code expires after 24 hours.
+
+<div className="w-xl mx-auto">
+	![Set up a passkey with an enrollment code](/assets/docs/passkey-enrollment.png?url)
+</div>
+
+## Managing Passkeys
+
+Under **Settings → Security**, users can add more passkeys, for example a backup on a second device, and delete passkeys they no longer use. Adding or deleting a passkey has to be confirmed with an existing passkey, and the last passkey can't be deleted.
+
+![Passkeys in the security settings](/assets/docs/security-passkeys.png?url)
+
+## Lost Passkeys
+
+If a user has lost all of their passkeys, an admin can reset them. See [Account Recovery](/docs/troubleshooting/account-recovery).
+
+## Disabling Passkey Login
+
+If all users sign in with an OIDC provider, you can turn off passkey login with [`DISABLE_LOCAL_AUTH`](/docs/configuration/env-variables). Creating the first admin with the setup code still works. Make sure that at least one admin can log in via SSO before you set it.

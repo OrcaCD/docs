@@ -1,0 +1,293 @@
+---
+title: CrowdSec
+description: Detect and block attacks on your OrcaCD Hub with CrowdSec
+---
+
+The Hub writes security events like failed logins, rejected agent connections and invalid webhook requests to its log in a fixed format. With [CrowdSec](https://www.crowdsec.net) you can turn these events into automatic bans. The same events work for other tools, such as fail2ban.
+
+<Callout title="Prerequisites" type="warn">
+	Set `TRUSTED_PROXIES` to the IP address of your [reverse proxy](/docs/guides/reverse-proxy).
+	Otherwise, every event shows the IP of the proxy, and CrowdSec would ban your proxy instead of the
+	attacker. Also set `LOG_JSON` to `true` and keep `LOG_LEVEL` at `info` or lower, see the
+	[environment variables](/docs/configuration/env-variables).
+</Callout>
+
+## Security events
+
+Every security event is a log line with `"category":"security"`. Failed or suspicious actions are logged as `warn`, successful logins and registrations as `info`.
+
+<Accordions>
+<Accordion title="Log details">
+
+```json
+{
+	"level": "warn",
+	"time": "2026-01-01T12:00:00Z",
+	"service": "hub",
+	"category": "security",
+	"event": "login_failed",
+	"client_ip": "203.0.113.7",
+	"method": "POST",
+	"path": "/api/v1/auth/login",
+	"reason": "wrong_password",
+	"email": "admin@example.com",
+	"message": "security event"
+}
+```
+
+Each event has the fields `event`, `client_ip`, `method` and `path`. Depending on the event, there are more fields, like `reason`, `email`, `user_id`, `provider_id` or `agent_id`. If the request is made by a signed-in user, `user_id` is always set.
+
+| Event                    | Level  | Description                                                                                     |
+| ------------------------ | ------ | ----------------------------------------------------------------------------------------------- |
+| `login_failed`           | `warn` | A login with email and password failed.                                                         |
+| `login_success`          | `info` | A user signed in with email and password.                                                       |
+| `oidc_login_failed`      | `warn` | A login with an [OIDC provider](/docs/guides/oidc) failed.                                      |
+| `oidc_login_success`     | `info` | A user signed in with an OIDC provider.                                                         |
+| `setup_code_failed`      | `warn` | A wrong setup code was used to create the first account.                                        |
+| `registration_failed`    | `warn` | Someone tried to register although the first account already exists.                            |
+| `registration_success`   | `info` | The first account was created.                                                                  |
+| `password_change_failed` | `warn` | A signed-in user entered the wrong current password.                                            |
+| `token_rejected`         | `warn` | A request used a forged, revoked or otherwise invalid session. Expired sessions are not logged. |
+| `access_denied`          | `warn` | A signed-in user tried to use something they have no permission for.                            |
+| `agent_auth_failed`      | `warn` | An Agent could not connect to the Hub.                                                          |
+| `webhook_auth_failed`    | `warn` | A webhook or GitHub Actions request was rejected.                                               |
+
+</Accordion>
+</Accordions>
+
+Rate limits and requests from IPs outside of `ALLOWED_IPS` are not logged by the Hub, as this would flood the log during an attack. The Hub answers with `429 Too Many Requests` and `403 Forbidden`, which you can detect in the log of your reverse proxy, see [rate limits and blocked requests](#rate-limits-and-blocked-requests).
+
+## Set up CrowdSec
+
+This guide assumes that CrowdSec and a [bouncer](https://docs.crowdsec.net/u/bouncers/intro) already run on your server, for example the Nginx, Traefik or firewall bouncer. If not, follow the [CrowdSec quickstart](https://docs.crowdsec.net/u/getting_started/intro) first.
+
+### Read the Hub log [step]
+
+Tell CrowdSec where to find the log of the Hub. Add a file to the `acquis.d` directory of CrowdSec, usually `/etc/crowdsec/acquis.d/`.
+If you use the default `docker-compose.yml`, the Hub log is read from the container:
+
+```yaml title="/etc/crowdsec/acquis.d/orcacd.yaml"
+source: docker
+container_name:
+  - orca-hub
+labels:
+  type: orcacd
+```
+
+If CrowdSec runs in a container itself, mount the Docker socket (`/var/run/docker.sock`) read-only into it.
+
+### Add the parser [step]
+
+The parser reads the JSON lines of the Hub and ignores all lines that are not security events.
+
+```yaml title="/etc/crowdsec/parsers/s01-parse/orcacd-logs.yaml"
+onsuccess: next_stage
+name: custom/orcacd-logs
+description: Parse the security events of the OrcaCD Hub
+filter: "evt.Line.Labels.type == 'orcacd' && JsonExtract(evt.Line.Raw, 'category') == 'security'"
+statics:
+  - meta: log_type
+    value: orcacd_security
+  - meta: service
+    value: orcacd
+  - meta: source_ip
+    expression: JsonExtract(evt.Line.Raw, "client_ip")
+  - meta: orcacd_event
+    expression: JsonExtract(evt.Line.Raw, "event")
+  - meta: orcacd_reason
+    expression: JsonExtract(evt.Line.Raw, "reason")
+  - meta: orcacd_email
+    expression: JsonExtract(evt.Line.Raw, "email")
+  - meta: orcacd_agent
+    expression: JsonExtract(evt.Line.Raw, "agent_id")
+```
+
+### Add the scenarios [step]
+
+A scenario describes when CrowdSec reports an IP. Below you find multiple recommended scenario you can add in `/etc/crowdsec/scenarios`.
+Misconfigured Agents and Git providers cause events as well. Whitelist them or fix their configuration, otherwise you ban your own hosts.
+
+<Accordions type="multiple">
+<Accordion title="Login brute force">
+
+```yaml title="/etc/crowdsec/scenarios/orcacd-login-bf.yaml"
+type: leaky
+name: custom/orcacd-login-bf
+description: "Detect brute force attacks on the OrcaCD login"
+filter: "evt.Meta.log_type == 'orcacd_security' && evt.Meta.orcacd_event in ['login_failed', 'password_change_failed']"
+groupby: evt.Meta.source_ip
+capacity: 6
+leakspeed: "30s"
+blackhole: 1m
+labels:
+  service: orcacd
+  confidence: 3
+  spoofable: 0
+  classification:
+    - attack.T1110
+  behavior: "http:bruteforce"
+  label: "OrcaCD login brute force"
+  remediation: true
+```
+
+</Accordion>
+<Accordion title="Password spraying">
+
+```yaml title="/etc/crowdsec/scenarios/orcacd-login-spraying.yaml"
+type: leaky
+name: custom/orcacd-login-spraying
+description: "Detect an IP that tries to sign in with many different accounts"
+filter: "evt.Meta.log_type == 'orcacd_security' && evt.Meta.orcacd_event == 'login_failed' && evt.Meta.orcacd_email != ''"
+groupby: evt.Meta.source_ip
+distinct: evt.Meta.orcacd_email
+capacity: 5
+leakspeed: "5m"
+blackhole: 1m
+labels:
+  service: orcacd
+  confidence: 3
+  spoofable: 0
+  classification:
+    - attack.T1110.003
+  behavior: "http:bruteforce"
+  label: "OrcaCD password spraying"
+  remediation: true
+```
+
+</Accordion>
+<Accordion title="OIDC brute force">
+
+```yaml title="/etc/crowdsec/scenarios/orcacd-oidc-bf.yaml"
+type: leaky
+name: custom/orcacd-oidc-bf
+description: "Detect repeated failed OIDC logins"
+filter: "evt.Meta.log_type == 'orcacd_security' && evt.Meta.orcacd_event == 'oidc_login_failed'"
+groupby: evt.Meta.source_ip
+capacity: 10
+leakspeed: "30s"
+blackhole: 1m
+labels:
+  service: orcacd
+  confidence: 2
+  spoofable: 0
+  classification:
+    - attack.T1110
+  behavior: "http:bruteforce"
+  label: "OrcaCD OIDC brute force"
+  remediation: true
+```
+
+</Accordion>
+<Accordion title="Setup code guessing">
+
+```yaml title="/etc/crowdsec/scenarios/orcacd-setup-code-bf.yaml"
+type: leaky
+name: custom/orcacd-setup-code-bf
+description: "Detect guessing of the OrcaCD setup code"
+filter: "evt.Meta.log_type == 'orcacd_security' && evt.Meta.orcacd_event in ['setup_code_failed', 'registration_failed']"
+groupby: evt.Meta.source_ip
+capacity: 3
+leakspeed: "5m"
+blackhole: 10m
+labels:
+  service: orcacd
+  confidence: 3
+  spoofable: 0
+  classification:
+    - attack.T1110
+  behavior: "http:bruteforce"
+  label: "OrcaCD setup code guessing"
+  remediation: true
+```
+
+</Accordion>
+<Accordion title="Agent authentication failures">
+
+```yaml title="/etc/crowdsec/scenarios/orcacd-agent-bf.yaml"
+type: leaky
+name: custom/orcacd-agent-bf
+description: "Detect failed Agent authentications"
+filter: "evt.Meta.log_type == 'orcacd_security' && evt.Meta.orcacd_event == 'agent_auth_failed'"
+groupby: evt.Meta.source_ip
+capacity: 5
+leakspeed: "1m"
+blackhole: 5m
+labels:
+  service: orcacd
+  confidence: 3
+  spoofable: 0
+  classification:
+    - attack.T1110
+  behavior: "http:bruteforce"
+  label: "OrcaCD Agent authentication failures"
+  remediation: true
+```
+
+</Accordion>
+<Accordion title="Webhook probing">
+
+```yaml title="/etc/crowdsec/scenarios/orcacd-webhook-probe.yaml"
+type: leaky
+name: custom/orcacd-webhook-probe
+description: "Detect rejected webhook requests"
+filter: "evt.Meta.log_type == 'orcacd_security' && evt.Meta.orcacd_event == 'webhook_auth_failed'"
+groupby: evt.Meta.source_ip
+capacity: 10
+leakspeed: "1m"
+blackhole: 5m
+labels:
+  service: orcacd
+  confidence: 2
+  spoofable: 0
+  classification:
+    - attack.T1595
+  behavior: "http:scan"
+  label: "OrcaCD webhook probing"
+  remediation: true
+```
+
+</Accordion>
+<Accordion title="API probing">
+
+```yaml title="/etc/crowdsec/scenarios/orcacd-probing.yaml"
+type: leaky
+name: custom/orcacd-probing
+description: "Detect probing of the OrcaCD API"
+filter: "evt.Meta.log_type == 'orcacd_security' && evt.Meta.orcacd_event in ['token_rejected', 'access_denied']"
+groupby: evt.Meta.source_ip
+capacity: 15
+leakspeed: "30s"
+blackhole: 5m
+labels:
+  service: orcacd
+  confidence: 2
+  spoofable: 0
+  classification:
+    - attack.T1595
+  behavior: "http:scan"
+  label: "OrcaCD API probing"
+  remediation: true
+```
+
+</Accordion>
+</Accordions>
+
+We also recommend to block large amounts of rate limited requests by checking the logs of your reverse proxy for HTTP 429.
+
+### Reload CrowdSec [step]
+
+Restart CrowdSec so it loads the new files:
+
+```bash
+sudo systemctl restart crowdsec
+```
+
+### Test the setup [step]
+
+Check that a log line is understood by the parser and matches a scenario:
+
+```bash
+cscli explain --type orcacd --log '{"level":"warn","service":"hub","category":"security","event":"login_failed","client_ip":"203.0.113.7","method":"POST","path":"/api/v1/auth/login","reason":"wrong_password","email":"admin@example.com","message":"security event"}'
+```
+
+The output should show that the line was parsed by `custom/orcacd-logs` and that `source_ip` is `203.0.113.7`. To see real events afterward, use `cscli metrics show acquisition` and `cscli alerts list`.

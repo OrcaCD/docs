@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+  # Picks up changes to the OpenAPI spec on the main branch of orca-cd
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io

@@ -71,20 +71,21 @@ Before every deployment, the Agent checks the Compose file and rejects settings 
 <Accordions>
 <Accordion title="What is rejected">
 
-- `privileged`, `use_api_socket`, `devices`, `device_cgroup_rules` and `volumes_from`
-- `cap_add` with capabilities that give access to the host, e.g. `ALL`, `SYS_ADMIN`, `NET_ADMIN`, `SYS_PTRACE` or `DAC_READ_SEARCH`
-- Sharing a namespace with the host or another container, e.g. `network_mode: host`, `pid: host` or `ipc: container:...`
+For example:
+
+- `privileged`, `devices` and `volumes_from`
+- `cap_add` with host-level capabilities like `SYS_ADMIN`
+- Sharing a namespace with the host, e.g. `network_mode: host`
 - `security_opt` other than `no-new-privileges`
-- Volumes with `driver_opts`, provider services and privileged lifecycle hooks
 
 </Accordion>
 <Accordion title="Which host paths can be mounted">
 
-The rules apply to bind mounts, `env_file` and file-based `secrets` and `configs`. Paths must be absolute.
+The rules apply to bind mounts, `env_file`, `secrets` and `configs`. Paths must be absolute.
 
-- System paths like `/`, `/etc`, `/root`, `/proc`, `/sys`, `/usr`, `/dev`, `/run`, the Docker socket and `/var/lib/docker` are rejected, as are their parents.
-- `/home` and the home directories themselves are rejected, as well as paths below them that contain credentials, e.g. `.ssh`, `.aws`, `.kube`, `.docker` or private keys.
-- Inside the deployments directory, an application can only use its own directory, and paths must not go through a symlink.
+- System paths like `/etc`, `/proc` or the Docker socket are rejected.
+- Home directories and credential folders like `.ssh` are rejected.
+- Inside the deployments directory, an application can only use its own directory.
 
 With `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR=true`, all host paths have to be inside the deployment directory of the application.
 

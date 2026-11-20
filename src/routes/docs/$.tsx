@@ -17,6 +17,9 @@ import defaultMdxComponents from "fumadocs-ui/mdx";
 import { baseOptions } from "@/lib/layout.shared";
 import { getPageMarkdownUrl, source } from "@/lib/source";
 import { Suspense } from "react";
+import type { Document } from "fumadocs-openapi";
+import { OpenAPIPage } from "@/components/api-page";
+import { openapi } from "@/lib/openapi";
 import { AccountRecoveryTerminal } from "@/components/account-recovery-terminal";
 import { Badge } from "@/components/badge";
 import { Checklist, ChecklistItem } from "@/components/checklist";
@@ -29,9 +32,34 @@ export const Route = createFileRoute("/docs/$")({
 		const slugs = params._splat?.split("/") ?? [];
 		const data = await loader({ data: slugs });
 		await clientLoader.preload(data.path);
-		return data;
+		const openapiDocs = Object.fromEntries(
+			await Promise.all(
+				data.openapiDocuments.map(async (id) => [id, await loadOpenAPIDocument(id)]),
+			),
+		);
+		return { ...data, openapiDocs };
 	},
 });
+
+// The API reference pages share one document, so it's loaded once and kept for
+// the next pages instead of being part of every page's data
+const openapiDocuments = new Map<string, Promise<Document>>();
+
+const getOpenAPIDocument = createServerFn({
+	method: "GET",
+})
+	.validator((id: string) => id)
+	.middleware([staticFunctionMiddleware])
+	.handler(async ({ data: id }) => (await openapi.getSchema(id)).bundled);
+
+function loadOpenAPIDocument(id: string) {
+	let document = openapiDocuments.get(id);
+	if (!document) {
+		document = getOpenAPIDocument({ data: id });
+		openapiDocuments.set(id, document);
+	}
+	return document;
+}
 
 const loader = createServerFn({
 	method: "GET",
@@ -48,6 +76,8 @@ const loader = createServerFn({
 			path: page.path,
 			markdownUrl: getPageMarkdownUrl(page).url,
 			pageTree: await source.serializePageTree(source.getPageTree()),
+			// The IDs of the OpenAPI documents an API reference page shows
+			openapiDocuments: (page.data._openapi?.preload as string[] | undefined) ?? [],
 		};
 	});
 
@@ -57,14 +87,17 @@ const clientLoader = browserCollections.docs.createClientLoader({
 		{
 			markdownUrl,
 			path,
+			openapiDocs,
 		}: {
 			markdownUrl: string;
 			path: string;
+			openapiDocs: Record<string, Document>;
 		},
 	) {
 		return (
 			<DocsPage
 				toc={toc}
+				full={frontmatter.full}
 				tableOfContent={{
 					style: "clerk",
 				}}
@@ -88,6 +121,9 @@ const clientLoader = browserCollections.docs.createClientLoader({
 							Badge,
 							Checklist,
 							ChecklistItem,
+							OpenAPIPage: (props: Parameters<typeof OpenAPIPage>[0]) => (
+								<OpenAPIPage {...props} preloaded={{ docs: openapiDocs }} />
+							),
 							img: (props) => <ImageZoom {...(props as any)} />,
 						}}
 					/>
@@ -99,11 +135,11 @@ const clientLoader = browserCollections.docs.createClientLoader({
 });
 
 function Page() {
-	const { path, pageTree, markdownUrl } = useFumadocsLoader(Route.useLoaderData());
+	const { path, pageTree, markdownUrl, openapiDocs } = useFumadocsLoader(Route.useLoaderData());
 
 	return (
 		<DocsLayout {...baseOptions()} tree={pageTree} githubUrl="https://github.com/OrcaCD/orca-cd">
-			<Suspense>{clientLoader.useContent(path, { markdownUrl, path })}</Suspense>
+			<Suspense>{clientLoader.useContent(path, { markdownUrl, path, openapiDocs })}</Suspense>
 		</DocsLayout>
 	);
 }

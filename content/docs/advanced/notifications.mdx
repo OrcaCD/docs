@@ -17,42 +17,17 @@ OrcaCD can send notifications when something happens to your applications, agent
 
 ## Events
 
-There are 11 events across three resource types. A notification only fires for an event if the event is selected **and** the resource it happened to is covered by the notification (see [Notification Scope](#notification-scope)).
+Each notification selects the events it is sent for: deployments, image updates, syncs, health changes and rollbacks of applications, agents going offline and coming back, and failed or recovered repository syncs. A notification only fires if the event is selected **and** the resource is covered (see [Notification Scope](#notification-scope)).
 
-### Application Events
+To avoid noise, OrcaCD only notifies on changes:
 
-| Event                           | Fires when                                                                                                                                                                                                            | Example message                                  |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| **Deployment succeeded**        | The agent reports that a deployment was applied successfully.                                                                                                                                                         | `Success: deployment succeeded for my-app`       |
-| **Deployment failed**           | The agent reports that a deployment failed.                                                                                                                                                                           | `Error: deployment failed for my-app`            |
-| **Image update succeeded**      | Image polling pulled new images for the application, or an explicitly triggered image update (registry webhook, manual or GitHub Action) finished. Periodic polls that find no new images stay silent.                | `Success: image update succeeded for my-app`     |
-| **Image update failed**         | Pulling the application's images failed, both for periodic image polling and for explicitly triggered image updates.                                                                                                  | `Error: image update failed for my-app`          |
-| **Sync failed**                 | The hub detected a new commit but couldn't hand the deployment to the agent, for example because the Compose file couldn't be fetched from the repository or the agent is not connected.                              | `Error: sync failed for my-app`                  |
-| **Became unhealthy or stopped** | The application was **healthy** and is now reported as unhealthy or stopped. It does not fire when the previous health was unknown (for example right after an agent reconnects) or while the application is syncing. | `Application my-app is unhealthy` / `is stopped` |
-| **Healthy again**               | The application was unhealthy or stopped and is now reported as healthy again.                                                                                                                                        | `Application my-app is healthy again`            |
-
-### Agent Events
-
-| Event                             | Fires when                                                                                                                       | Example message                 |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| **Went offline (after 1 minute)** | The agent has been disconnected for 60 seconds. Shorter interruptions, such as agent restarts or network blips, stay silent.     | `Agent my-agent is offline`     |
-| **Back online**                   | The agent reconnects after an offline notification was sent for it. Reconnects without a prior offline notification stay silent. | `Agent my-agent is back online` |
-
-<Callout>
-	The hub keeps track of which agents were reported offline in memory only. After a hub restart, no
-	**Back online** notification is sent for agents that were reported offline before the restart.
-</Callout>
-
-### Repository Events
-
-| Event              | Fires when                                                                                                                               | Example message                                              |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| **Sync failed**    | A repository sync fails after the previous sync succeeded. Repeated failures (for example on every polling interval) don't notify again. | `Error: sync failed for repository my-repo: <error details>` |
-| **Sync recovered** | A repository sync succeeds after the previous sync failed.                                                                               | `Success: sync recovered for repository my-repo`             |
+- Health events fire when an application goes from healthy to unhealthy, degraded or stopped, and when it is healthy again.
+- An agent is reported offline after it has been disconnected for one minute.
+- A failing repository sync notifies once, and again when it recovers.
 
 ## Creating a Notification
 
-Navigate to **Notifications**, click **Add Notification** and follow the dialog. In the events step, all events are preselected but no resources are, so pick resources or turn on the "All ..." switch in every tab you want notifications for (see [Notification Scope](#notification-scope)).
+Navigate to **Notifications**, click **Add Notification** and pick where the notifications should be sent, e.g. Discord or email. Then follow the dialog. In the events step, all events are preselected but no resources are, so pick resources or turn on the "All ..." switch in every tab you want notifications for (see [Notification Scope](#notification-scope)).
 
 Before saving, the hub sends a test notification with the entered configuration. The notification is only saved if the test message was delivered. Otherwise, the error is shown in the dialog and nothing is saved.
 

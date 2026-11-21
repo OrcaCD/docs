@@ -50,6 +50,14 @@ We use Go and Node.js for the development of the backend and frontend respective
 
 To run an Agent locally, [register an agent](/docs/advanced/architecture/agents) in the UI, set `AUTH_TOKEN` in `backend/.env` and start it with `just run-agent` (or use `just dev-all` to start the Hub, Agent and frontend together).
 
+If [air](https://github.com/air-verse/air) is installed, the Hub and Agent rebuild and restart automatically on code changes. Otherwise they run with a plain `go run`.
+
+### Gitea mock
+
+To test repositories and deployments without a real Git provider, `just dev` and `just dev-all` also start a Gitea mock (or run `just run-gitea-mock` on its own). It serves the repositories in `backend/data/gitea-mock` at `https://localhost:3440`, laid out as `<owner>/<repo>/<branch>/<files>`. Every change you save there becomes a new commit, and an empty directory is seeded with the demo repository `orca/demo`. Add it as a Gitea repository with the URL `https://localhost:3440/orca/demo`.
+
+Your `backend/.env` needs the `ALLOWED_INTERNAL_IPS` and `CA_CERT_FILE` values from `.env.dev.example`, so the Hub can reach the mock and trust its certificate.
+
 ### Just commands
 
 The `Justfile` in the repository root includes all backend commands, so they can be run from the root or from the `backend/` directory. To list all available commands with a short description, run:
@@ -109,7 +117,7 @@ A Docker Compose file is provided for running the full stack locally:
 docker compose -f docker-compose.dev.yml up --build
 ```
 
-The Hub will be available at `http://localhost:8080`. The Agent needs an `AUTH_TOKEN`, so [register an agent](/docs/advanced/architecture/agents) in the UI and set it in `docker-compose.dev.yml`. To test OIDC login, start a local [Pocket ID](https://pocket-id.org) instance on `http://localhost:1411` with `--profile pocket-id`.
+The Hub will be available at `http://localhost:8080`. The Agent needs an `AUTH_TOKEN`, so [register an agent](/docs/advanced/architecture/agents) in the UI and set it in `docker-compose.dev.yml`. To test OIDC login, start a local [Pocket ID](https://pocket-id.org) instance on `http://localhost:1411` with `--profile pocket-id`. The Gitea mock is available with `--profile gitea-mock` at `https://gitea-mock:3440` and serves `data/gitea-mock`.
 
 ### Submitting a Pull Request
 

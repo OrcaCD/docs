@@ -19,7 +19,9 @@ OrcaCD reads the Compose file from the latest commit of the branch and immediate
 
 ## Application Details
 
-The details page of an application shows its [status](#application-status), the repository, the deployed commit, the Agent and what triggered the last sync. Below, you can see the current Compose file and a diff to the previous version.
+The details page of an application shows its [status](#application-status), the repository, the deployed commit, the Agent and what triggered the last sync. Below, you can see the current Compose file and a diff to the previous version. Unchanged lines in the diff are collapsed.
+
+If the Agent finds common mistakes in the Compose file, such as a missing restart policy, a database without a volume or an image without a fixed tag, they are listed under **Compose configuration warnings**. Warnings don't block the deployment, unless the setting is also rejected by the [deployment policy](/docs/advanced/security#compose-deployment-policy).
 
 ![Application details with the Deploy dropdown](/assets/docs/application-details.png?url)
 
@@ -42,14 +44,21 @@ New commits are not shown as out of sync: as soon as OrcaCD sees a new commit (d
 
 ### Health Status
 
-The health is reported by the Agent, which watches the Docker events of the application's containers and updates the status in real time.
+The health is reported by the Agent, which watches the Docker events of the application's containers and updates the status of every service in real time.
 
 | Status      | Meaning                                                                                                                         |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `Healthy`   | All containers are running and none of them reports a failing Docker healthcheck                                                |
-| `Unhealthy` | At least one container is not running (e.g. restarting) or reports a failing Docker healthcheck                                 |
+| `Degraded`  | Some services are unhealthy, but at least one service is still healthy                                                          |
+| `Unhealthy` | At least one container is not running (e.g. restarting) or reports a failing Docker healthcheck, and no service is healthy      |
 | `Stopped`   | All containers are created, exited or paused, e.g. after `docker compose stop`                                                  |
 | `Unknown`   | No containers exist, a healthcheck is still starting, a deployment is running, the Agent is disconnected or cannot reach Docker |
+
+### Health History
+
+The **Health** page shows how available the application was over the last 24 hours, 7 days or 30 days, and lists every incident with its duration and the affected services. Incidents that started shortly after a deployment, rollback or image update, or while the Agent was offline, are marked as such. Times without data, e.g. while the Agent is offline, don't count towards the availability. The history is kept for 30 days.
+
+![Health history of an application](/assets/docs/application-health.png?url)
 
 ## Triggering a Deployment
 
@@ -69,7 +78,7 @@ OrcaCD automatically deploys when the tracked repository branch receives a new c
 
 ## History
 
-The **History** page of an application records every deployment, commit sync and image update with its time, trigger, the user who triggered it, the commit, the result (`Running`, `Succeeded`, `Failed` or `No change`) and error details.
+The **History** page of an application records every deployment, commit sync and image update with its time, trigger, the user who triggered it, the commit, the result and error details. [Rollbacks](/docs/advanced/architecture/rollbacks) are shown in the history as well, and recent successful deployments have a **Roll back** button.
 
 You can switch between a table and a timeline view. The search filters the history by type, trigger, result, user, commit hash or message, and error message.
 
@@ -85,13 +94,13 @@ Saving does not deploy the application. If you change the Compose file, the Agen
 
 ![Deploy prompt after saving changes](/assets/docs/deploy-after-edit-toast.png?url)
 
-When you move the application to another Agent or rename it so that its Compose project name changes, OrcaCD first removes the old containers from the current Agent. Deleting an application also removes its containers and deployment directory from the Agent. Both require the current Agent to be online. Otherwise the request fails with `409 Conflict` and nothing is changed.
+When you move the application to another Agent or rename it so that its Compose project name changes, OrcaCD first removes the old containers from the current Agent. Deleting an application also removes its containers and deployment directory from the Agent. Both require the current Agent to be online. Otherwise the request fails with `409 Conflict` and nothing is changed. This changes the deployment directory, so the [env files](/docs/advanced/architecture/environment) and other data of the application on the Agent are lost.
 
 ![General settings of an application](/assets/docs/application-general-settings.png?url)
 
 #### Delete old images
 
-When enabled, OrcaCD removes the images an application no longer uses after every successful deployment, image update and manual image pull. Images are removed by ID, so this works both for changed tags and for new digests of the same tag. Images that are still used by other containers are kept.
+When enabled, OrcaCD removes the images an application no longer uses after every successful deployment, image update and manual image pull. Images are removed by ID, so this works both for changed tags and for new digests of the same tag. Images that are still used by other containers are kept. If [automatic rollback](/docs/advanced/architecture/rollbacks) is enabled, the images needed to roll back are kept as well.
 
 ### Image Updates
 
@@ -124,3 +133,11 @@ Click **Regenerate** to create a new secret or **Revoke** to disable the webhook
 	The Agent must be online for the image pull webhook to succeed. If the Agent is offline, the event
 	is not queued.
 </Callout>
+
+### Environment Variables
+
+Edit the values of the env files used by the Compose file. See [Environment Files](/docs/advanced/architecture/environment).
+
+### Rollbacks
+
+Roll back failed deployments automatically. See [Rollbacks](/docs/advanced/architecture/rollbacks).

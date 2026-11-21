@@ -78,7 +78,7 @@ Click on **Add webhook** to create the webhook.
 ### Harbor
 
 Select a project in Harbor and go to the Webhooks tab. Click on **New Webhook** and enter any name for the webhook.
-Make sure that Notify type is set to `http` and payload format is set to `default`. Only select the `Artifact pushed` event and uncheck all other events.
+Set Notify type to `http` and the payload format to `Default`. Only select the `Artifact pushed` event, other events are ignored.
 Paste the webhook URL from OrcaCD and add the secret in the `Auth Header` field.
 It's also strongly recommended to enable TLS verification for the webhook. Click on **Add** to create the webhook.
 

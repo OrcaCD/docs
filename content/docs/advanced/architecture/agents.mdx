@@ -73,6 +73,14 @@ Update the `AUTH_TOKEN` in the Agent's `agent.env` (or its Compose file) and rec
 docker compose up -d agent
 ```
 
+## Allowed IPs
+
+To limit where an Agent can connect from, enter its IPs or CIDR ranges under **Allowed IPs** when you add or edit the Agent, one per line (up to 50). Leave the field empty to allow any IP. Changing the list disconnects a running Agent whose IP is no longer allowed.
+
+Connections from other IPs are rejected, but the Hub remembers the IP of the last attempt. Click **Add last seen IP** in the edit dialog to allow it with one click.
+
+The IP is checked against the client IP the Hub sees. If the Hub runs behind a reverse proxy, set [`TRUSTED_PROXIES`](/docs/configuration/env-variables#hub), otherwise every Agent appears with the IP of the proxy.
+
 ## Deleting an Agent
 
 Deleting an Agent removes it and all of its applications (including their history) from the Hub and disconnects the Agent. This also works while the Agent is offline, e.g. if the host no longer exists.

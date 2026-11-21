@@ -74,15 +74,6 @@ A notification is sent when the notification is enabled, the event is selected, 
 
 You can combine notifications: use one notification with the "All" switches for a global channel, and add separate notifications that cover only specific resources for channels that should only receive specific alerts.
 
-<Callout title="Upgrading from an earlier version" type="warn">
-	Existing notifications are migrated with the events that were sent before events became
-	selectable: deployment succeeded/failed, image update succeeded/failed and application sync
-	failed. Health, agent and repository events are **not** enabled automatically. **Enable by
-	Default** was replaced by **All Applications**, which is only turned on if the notification was
-	linked to every existing application. Otherwise, the notification keeps its linked applications.
-	Review your notifications after upgrading.
-</Callout>
-
 ## Network Access
 
 All notification traffic goes through OrcaCD's SSRF protection, including SMTP connections. Connections to private, loopback and link-local addresses are blocked. If you run a self-hosted target on a private IP, for example a Gotify server, an SMTP relay or a webhook receiver in your local network, add its IP or CIDR range to [`ALLOWED_INTERNAL_IPS`](/docs/configuration/env-variables).

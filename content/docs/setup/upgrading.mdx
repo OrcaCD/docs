@@ -30,3 +30,9 @@ docker compose pull && docker compose up -d
 	Always upgrade the Hub and all Agents to the same version. Changes to the encrypted connection
 	between Hub and Agent can prevent older Agents from connecting to a newer Hub and vice versa.
 </Callout>
+
+## Downgrading
+
+An older Hub refuses to start on a database that a newer version has already migrated. To go back anyway, set `ALLOW_DOWNGRADE=true` in the `.env` file of the Hub and start the older version. The Hub first writes a backup next to its database (`hub.db-downgrade-v<version>-<timestamp>.bak`) and then rolls back the migrations of the newer version. Remove the variable again afterwards.
+
+This only works if the newer version stored its migrations in the database. If the rollback is not possible, restore the [export](../advanced/cli#import) you created before upgrading instead.

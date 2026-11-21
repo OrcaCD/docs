@@ -1,3 +1,13 @@
 {
-	"pages": ["cli", "security", "notifications", "crowdsec", "tailscale", "architecture"]
+	"pages": [
+		"cli",
+		"security",
+		"passkeys",
+		"roles",
+		"api-tokens",
+		"notifications",
+		"crowdsec",
+		"tailscale",
+		"architecture"
+	]
 }

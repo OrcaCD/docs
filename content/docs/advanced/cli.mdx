@@ -116,15 +116,15 @@ docker compose run --rm \
 docker compose up -d hub
 ```
 
-After a successful rotation, all agent tokens and user sessions signed with the old secret are invalidated. Users need to log in again and agents need their tokens re-issued.
+After a successful rotation, all agent tokens and user sessions signed with the old secret are invalidated. Users need to log in again and agents need their tokens re-issued. Passkeys are re-encrypted with the new secret and keep working, as do [API tokens](/docs/advanced/api-tokens).
 
-### reset-password
+### reset-passkeys
 
-Resets a user's password and forces them to change it on the next login. See [Account Recovery](/docs/troubleshooting/account-recovery) for full details.
+Removes all passkeys of a local user, signs them out on all devices and prints a single-use enrollment code, which is valid for 24 hours. See [Account Recovery](/docs/troubleshooting/account-recovery) for full details. The command can be run while the Hub is running.
 
 ```bash
-hub reset-password --email <email>
-hub reset-password --id <user-id>
+hub reset-passkeys --email <email>
+hub reset-passkeys --id <user-id>
 ```
 
 | Flag      | Description               |

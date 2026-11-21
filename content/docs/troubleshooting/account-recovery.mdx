@@ -3,26 +3,23 @@ title: Account Recovery
 description: Steps to recover your account if you have lost access
 ---
 
-There are two ways to reset a password for a user:
+If a user has lost their passkeys, reset them. This removes all passkeys of the user, signs them out on all devices and creates a single-use enrollment code. The user clicks **Set up a passkey** on the login page and enters the code within 24 hours to create a new passkey.
 
-1. UI: An admin can reset the password for a user in the admin panel under the "User Management" tab by clicking on the three dots next to the user's name and selecting "Edit".
-2. Terminal: You can reset a password for a user by running `hub reset-password --email <email>` or `hub reset-password --id <user-id>`. To execute this command with Docker you have to run the following command:
+There are two ways to reset the passkeys of a user:
+
+1. **UI**: An admin opens **Admin → User Management**, clicks on the three dots next to the user, selects **Edit** and then **Reset passkeys**.
+2. **Terminal**: If no admin can log in anymore, run `hub reset-passkeys` with the email address or ID of the user:
 
 ```bash
-docker compose exec hub /app/hub reset-password --email <email>
+docker compose exec hub /app/hub reset-passkeys --email <email>
 ```
 
-<Callout>
-	The user with the reset password has to change the password on the next login. Resetting a
-	password also signs the user out on all devices.
-</Callout>
+<AccountRecoveryTerminal />
 
 <Callout type="warn">
-	Passwords can only be reset for users with a local account. Users that only log in via SSO have to
-	recover their account at the identity provider. If `DISABLE_LOCAL_AUTH=true` is set, password
-	login is disabled and a reset password can not be used until the variable is removed.
+	Only users with a local account have passkeys. Users that only log in via SSO have to recover
+	their account at the identity provider. If `DISABLE_LOCAL_AUTH=true` is set, enrollment codes
+	can't be used until the variable is removed.
 </Callout>
 
 If no user exists yet and you lost the setup code for the first admin account, restart the Hub. A new setup code is printed to the logs on every start (`docker compose logs hub`).
-
-<AccountRecoveryTerminal />

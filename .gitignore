@@ -17,3 +17,8 @@ node_modules
 .tanstack
 
 .source
+# Generated from the OpenAPI spec of orca-cd by `node --run generate:api`
+/openapi.json
+/content/docs/api-reference/*
+!/content/docs/api-reference/index.mdx
+!/content/docs/api-reference/meta.json

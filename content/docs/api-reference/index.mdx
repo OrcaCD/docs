@@ -1,0 +1,38 @@
+---
+title: Overview
+description: Use the REST API of the hub from scripts and CI pipelines.
+icon: Braces
+---
+
+The hub serves a REST API under `/api/v1`. The web UI uses the same API, so everything you can do in the UI can also be automated. The pages in this section are generated from the [OpenAPI spec](https://github.com/OrcaCD/orca-cd/blob/main/backend/openapi.json) and always describe the current `main` branch, so a route can be newer than your release.
+
+## Authentication
+
+Scripts and CI pipelines authenticate with an [API token](/docs/advanced/api-tokens), sent in the `Authorization` header:
+
+```bash
+curl -X POST https://orca.example.com/api/v1/applications/<id>/deploy \
+  -H "Authorization: Bearer orca_..."
+```
+
+A token can only do what its scopes and its owner allow. Each route names the permission it needs, which is also the scope a token needs. Some routes, like managing passkeys or API tokens, are only for the web UI and refuse API tokens with `403`.
+
+## Errors
+
+Errors return a JSON body with an `error` field:
+
+```json
+{ "error": "application not found" }
+```
+
+| Status | Meaning                                                                     |
+| ------ | --------------------------------------------------------------------------- |
+| `400`  | The request is invalid. The message names the invalid field.                |
+| `401`  | The token is missing, unknown, revoked or expired.                          |
+| `403`  | The token or its owner lacks the permission, or the route needs the web UI. |
+| `404`  | The resource doesn't exist or isn't visible to you.                         |
+| `429`  | Too many requests. Wait and try again.                                      |
+
+## OpenAPI spec
+
+Download [`openapi.json`](https://raw.githubusercontent.com/OrcaCD/orca-cd/main/backend/openapi.json) to generate a client or import the API into a tool like Bruno or Postman. Every hub also prints the spec of its own version with `hub openapi`.

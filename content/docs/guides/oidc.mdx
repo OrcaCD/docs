@@ -5,14 +5,11 @@ description: Learn how to use OIDC providers for authentication in OrcaCD
 
 OrcaCD supports OIDC authentication, allowing users to log in using their existing accounts from various OIDC providers. This guide will walk you through the process of setting up OIDC authentication in OrcaCD.
 
-<Callout title="Disable password login" type="info">
-	When using OIDC authentication, you can disable password login to enhance security. This ensures
-	that users can only log in using their OIDC provider accounts, reducing the risk of unauthorized
-	access through weak or compromised passwords. Before disabling password login, make sure the OIDC
-	authentication is properly configured and tested, and that at least one admin can log in via SSO.
-
-    To disable password login, set the `DISABLE_LOCAL_AUTH` environment variable. Look at the [environment variables documentation](/docs/configuration/env-variables) for more details. If you lock yourself out, see [Account Recovery](/docs/troubleshooting/account-recovery).
-
+<Callout title="Disable passkey login" type="info">
+	If all users log in via OIDC, you can turn off [passkey](/docs/advanced/passkeys) login with
+	[`DISABLE_LOCAL_AUTH`](/docs/configuration/env-variables). Before that, make sure that OIDC works
+	and that at least one admin can log in via SSO. If you lock yourself out, see [Account
+	Recovery](/docs/troubleshooting/account-recovery).
 </Callout>
 
 ## Example (Pocket ID)
@@ -58,6 +55,8 @@ The following options are enabled by default:
 - **Require verified emails**: Logins are only accepted if the provider confirms the email address with `email_verified=true`.
 - **Allow auto signup**: New OrcaCD users are created on their first login. If disabled, only existing users can log in.
 
+The optional **Groups claim** is used to [map groups to roles](/docs/advanced/roles#oidc-group-mapping).
+
 ### Self-hosted providers in a private network
 
 The Hub talks to the provider directly to load the discovery document, exchange the login code and fetch user information. These requests are protected against SSRF, so issuers that resolve to a private IP address (e.g. `192.168.x.x` or `10.x.x.x`) are rejected and the provider can not be saved. Add the IP or range of your provider to the `ALLOWED_INTERNAL_IPS` environment variable of the Hub to allow it. See the [environment variables documentation](/docs/configuration/env-variables).
@@ -66,8 +65,8 @@ The Hub talks to the provider directly to load the discovery document, exchange 
 
 - **Login flow**: OrcaCD uses the authorization code flow with PKCE (`S256`), a state parameter and a nonce.
 - **User information**: The email address, name and profile picture are read from the ID token. If the ID token does not contain the email address or `email_verified`, the Hub fetches them from the userinfo endpoint of the provider. An email address is required to log in.
-- **Account linking**: On the first login with a provider, OrcaCD looks for an existing user with the same email address and links the SSO login to it. This also works for accounts that were created with a password, including the admin account. Accounts whose users changed the email address themselves are not linked, because OrcaCD does not verify these addresses. Such logins fail with "Your account could not be linked. Please contact an administrator." An admin can resolve this by changing the email address of the account in **User Management**. Only a change by an admin clears the unverified state; saving the same address again does not. If no user exists, a new one is created (see "Allow auto signup"). Later logins are matched by the provider's user ID, and the name and email address are updated from the provider on every login.
-- **Roles**: New SSO users get the role `User`. Groups or roles from the provider are not mapped. Admins can promote users in the **User Management** section of the Admin settings.
+- **Account linking**: On the first login with a provider, OrcaCD looks for an existing user with the same email address and links the SSO login to it. This also works for local accounts with passkeys, including the admin account. Accounts whose users changed the email address themselves are not linked, because OrcaCD does not verify these addresses. Such logins fail with "Your account could not be linked. Please contact an administrator." An admin can resolve this by changing the email address of the account in **User Management**. Only a change by an admin clears the unverified state; saving the same address again does not. If no user exists, a new one is created (see "Allow auto signup"). Later logins are matched by the provider's user ID, and the name and email address are updated from the provider on every login.
+- **Roles**: Set a **Groups claim** on the provider to assign roles based on the groups of the user, see [OIDC group mapping](/docs/advanced/roles#oidc-group-mapping). New users without a mapped group get the role `User`. Admins can also assign roles in the **User Management** section of the Admin settings.
 
 <Callout type="warn">
 	Because SSO logins are linked to existing accounts by email address, only disable "Require

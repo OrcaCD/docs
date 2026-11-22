@@ -62,7 +62,37 @@ A big focus of OrcaCD next to ease of use is security. Here are some of the meas
 - On top of TLS, every Agent connection uses its own post-quantum-ready handshake and mutual authentication, so a compromised network or proxy can't read or tamper with deployments
 - The first admin needs a one-time setup code from the Hub logs and removed users or changed roles take effect immediately
 - OrcaCD has a protection layer against [Server-Side Request Forgery (SSRF)](https://developer.mozilla.org/docs/Web/Security/Attacks/SSRF)
-- Privileged containers are blocked by default. Exceptions need an explicit allowlist
+- Privileged containers are blocked by default by the [deployment policy](#compose-deployment-policy). Exceptions need an explicit allowlist
+
+## Compose deployment policy
+
+Before every deployment, the Agent checks the Compose file and rejects settings that would give an application access to the host. This way, someone who can push to your repository can't take over the server.
+
+<Accordions>
+<Accordion title="What is rejected">
+
+For example:
+
+- `privileged`, `devices` and `volumes_from`
+- `cap_add` with host-level capabilities like `SYS_ADMIN`
+- Sharing a namespace with the host, e.g. `network_mode: host`
+- `security_opt` other than `no-new-privileges`
+
+</Accordion>
+<Accordion title="Which host paths can be mounted">
+
+The rules apply to bind mounts, `env_file`, `secrets` and `configs`. Paths must be absolute.
+
+- System paths like `/etc`, `/proc` or the Docker socket are rejected.
+- Home directories and credential folders like `.ssh` are rejected.
+- Inside the deployments directory, an application can only use its own directory.
+
+With `RESTRICT_VOLUMES_TO_DEPLOYMENTS_DIR=true`, all host paths have to be inside the deployment directory of the application.
+
+</Accordion>
+</Accordions>
+
+If an application really needs one of these settings, e.g. a monitoring agent that reads the Docker socket, add its ID to `ALLOWED_PRIVILEGED_APPS` of the Agent. Applications in this list skip **all** checks, so keep it as short as possible.
 
 ## Security policy
 

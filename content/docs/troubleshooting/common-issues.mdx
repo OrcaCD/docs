@@ -23,13 +23,13 @@ description: Solutions to frequently encountered problems
 2. Confirm the `AUTH_TOKEN` matches the token generated for that Agent in the Hub UI.
 3. Check Agent logs: `docker compose logs agent` and look for connection errors.
 4. If the Hub is behind a reverse proxy, make sure WebSocket upgrades are forwarded correctly. See the [Reverse Proxy guide](/docs/guides/reverse-proxy).
-5. If the logs show `token is missing signing-key segment`, the token was created before v0.4.0. Rotate the token in the Hub UI and update `AUTH_TOKEN`. See [Upgrading](/docs/setup/upgrading).
+5. If the logs show `token is missing signing-key segment`, the token is outdated. [Rotate the token](/docs/advanced/architecture/agents#rotating-an-agent-token) in the Hub UI and update `AUTH_TOKEN`.
 6. If the Hub uses a self-signed certificate or a certificate from a private CA, mount the CA certificate into the Agent container and set `CA_CERT_FILE` to its path.
 7. After changing the `agent.env` file, recreate the container with `docker compose up -d agent`. A plain restart does not reload the env file.
 
 ## Agent logs "found the hub's secrets in the agent environment"
 
-The Agent received `APP_SECRET` or `OLD_APP_SECRET`, usually because it shares the `.env` file with the Hub (the default before v0.5.0). The Agent removes these variables at startup, so deployed applications can not read them, but you should give the Agent its own env file:
+The Agent received `APP_SECRET` or `OLD_APP_SECRET`, usually because it shares the `.env` file with the Hub. The Agent removes these variables at startup, so deployed applications can not read them, but you should give the Agent its own env file:
 
 1. Create an `agent.env` file next to your `docker-compose.yml` and move `HUB_URL`, `AUTH_TOKEN` and all other Agent settings from `.env` into it.
 2. Change `env_file: .env` to `env_file: agent.env` in the `agent` service.
@@ -109,9 +109,21 @@ Adding the application to `ALLOWED_PRIVILEGED_APPS` skips all deployment securit
 3. Review the webhook delivery logs in your Git provider (GitHub: Settings → Webhooks → Recent Deliveries) to see if the request reached the Hub.
 4. Verify the webhook is configured to send **push** events.
 
+## Hub does not start: "passkeys require HTTPS in APP_URL"
+
+[Passkeys](/docs/advanced/passkeys) only work over HTTPS. Set `APP_URL` to the `https://` URL of your [reverse proxy](/docs/guides/reverse-proxy). For local testing, `http://localhost` is allowed as well.
+
+## Passkey login fails
+
+**Checks:**
+
+1. Open OrcaCD with the exact URL from `APP_URL`. Passkeys are bound to this domain and don't work on other domains or IP addresses.
+2. If the browser shows that the request was canceled or timed out, try again. A passkey request is only valid for a few minutes.
+3. If the passkeys of a user are lost, [reset them](/docs/troubleshooting/account-recovery).
+
 ## Cannot log in after enabling OIDC / disabling local auth
 
-If you locked yourself out by disabling local authentication, see [Account Recovery](/docs/troubleshooting/account-recovery).
+If you locked yourself out by disabling passkey login with `DISABLE_LOCAL_AUTH`, remove the variable and restart the Hub. If the admin account has no passkey anymore, [reset its passkeys](/docs/troubleshooting/account-recovery) with `hub reset-passkeys`.
 
 ---
 

@@ -1,0 +1,33 @@
+---
+title: API Tokens
+description: Use the OrcaCD REST API from scripts and CI pipelines
+---
+
+API tokens let scripts and CI pipelines call the OrcaCD REST API on behalf of a user. To trigger deployments from GitHub Actions, you don't need a token: use the [GitHub Action](/docs/guides/github-actions) instead.
+
+## Creating a Token
+
+Open **Settings → API Tokens** and click **Create token**. Enter a name, choose when the token expires (at most one year) and select its scopes. The token is only shown once, so copy it right away.
+
+Admins can always create tokens. Other users need a role with the [API Tokens permission](/docs/advanced/roles#custom-roles).
+
+![API tokens in the user settings](/assets/docs/api-tokens.png?url)
+
+## Scopes
+
+Scopes limit what a token can do, for example **Applications: View** and **Applications: Deploy** for a deployment script. A token can never do more than its owner: a scope only works where the owner has the permission as well, so tokens also lose access when the roles of the owner change. The **Admin** scope grants full access, including the admin API, as long as the owner is an admin.
+
+## Using a Token
+
+Send the token in the `Authorization` header:
+
+```bash
+curl -X POST https://orcacd.example.com/api/v1/applications/<app-id>/deploy \
+  -H "Authorization: Bearer orca_..."
+```
+
+Tokens work for the regular API, but not for account settings such as the profile, passkeys or managing API tokens, and not for the live updates of the UI.
+
+## Revoking Tokens
+
+Delete a token in **Settings → API Tokens** to revoke it immediately. Admins see the tokens of all users under **Admin → API Tokens** and can revoke them there. Requests made with a token are marked in the audit log.

@@ -81,7 +81,7 @@ As long as no user exists, the Hub prints a one-time setup code to its logs on e
 docker compose logs hub | grep setup-code
 ```
 
-The log entry also contains a link like `https://orcacd.example.com/register#setup-code=XXXX-XXXX-XXXX-XXXX`. Open it to get the code filled in automatically, or open `https://orcacd.example.com/register` and enter the code manually. The password must be at least 12 characters long and include an uppercase letter, a lowercase letter, a number and a special character.
+The log entry also contains a link like `https://orcacd.example.com/register#setup-code=XXXX-XXXX-XXXX-XXXX`. Open it to get the code filled in automatically, or open `https://orcacd.example.com/register` and enter the code manually. Then enter your name and email address and create a [passkey](../advanced/passkeys). OrcaCD has no passwords, and passkeys only work if the Hub is reachable via HTTPS or on `localhost`.
 
 ![Setup Admin Account](/assets/docs/account-setup.png?url)
 
@@ -99,4 +99,4 @@ The dialog waits for the first connection and switches to **Connected** as soon 
 
 ## Start Deploying [step]
 
-Add your first repository and create your first deployment. Connect a [OIDC provider](../guides/oidc) to allow your team to log in or invite them on the admin page.
+Add your first repository and create your first deployment. Connect an [OIDC provider](../guides/oidc) to allow your team to log in, or add them on the admin page and send them an [enrollment code](../advanced/passkeys#adding-users). Use [roles](../advanced/roles) to control what they can do.

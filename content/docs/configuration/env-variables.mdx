@@ -12,6 +12,8 @@ Each variable is tagged with a **Type**:
 - <Badge variant="purple">Security</Badge> - optional, but recommended to harden your deployment.
 - <Badge variant="gray">Optional</Badge> - safe to leave at the default value.
 
+Boolean variables accept `true`, `1`, `yes`, `on`, `t` and `y` (case-insensitive). Any other value counts as `false`.
+
 ## General
 
 These environment variables can be used in both the agent and the hub.
@@ -28,14 +30,15 @@ These environment variables can be used in both the agent and the hub.
 | `APP_URL`              | `-`           | <Badge variant="red">Required</Badge>      | Public URL of the Hub, e.g. `https://orcacd.example.com`, without a path. Must match the URL in the browser. Login requires HTTPS, except on `localhost`.                                   |
 | `APP_SECRET`           | `-`           | <Badge variant="red">Required</Badge>      | Secret for authentication and database encryption, at least 32 characters. Generate one with `openssl rand -base64 42`. See [`hub key rotate`](/docs/advanced/cli#key-rotate) to change it. |
 | `TRUSTED_PROXIES`      | `-`           | <Badge variant="amber">Recommended</Badge> | Comma separated IPs or CIDR ranges of your reverse proxies.                                                                                                                                 |
-| `DISABLE_LOCAL_AUTH`   | `false`       | <Badge variant="purple">Security</Badge>   | Disable password login, e.g. when using [OIDC](/docs/guides/oidc).                                                                                                                          |
+| `DISABLE_LOCAL_AUTH`   | `false`       | <Badge variant="purple">Security</Badge>   | Disable sign-in with passkeys and passkey enrollment, e.g. when everyone uses [OIDC](/docs/guides/oidc). The first admin can still be created with the setup code.                          |
 | `ALLOWED_IPS`          | `-`           | <Badge variant="purple">Security</Badge>   | Comma separated IPs or CIDR ranges that can access the Hub. Webhooks, GitHub Actions, the health check and Agent connections are always allowed.                                            |
 | `HOST`                 | `-`           | <Badge variant="gray">Optional</Badge>     | Address the Hub listens on. Defaults to all interfaces.                                                                                                                                     |
 | `PORT`                 | `8080`        | <Badge variant="gray">Optional</Badge>     | Port the Hub listens on.                                                                                                                                                                    |
 | `DISABLE_UI`           | `false`       | <Badge variant="gray">Optional</Badge>     | Don't serve the web UI, e.g. for API-only use.                                                                                                                                              |
 | `DISABLE_MCP`          | `false`       | <Badge variant="gray">Optional</Badge>     | Turn off the [MCP server](/docs/guides/ai) for AI agents. The endpoint then returns `404`.                                                                                                  |
 | `ALLOWED_INTERNAL_IPS` | `-`           | <Badge variant="gray">Optional</Badge>     | Comma separated private IPs or CIDR ranges the Hub may connect to, e.g. a self-hosted Git server or OIDC provider.                                                                          |
-| `DEMO`                 | `false`       | <Badge variant="gray">Optional</Badge>     | Demo mode: seeds demo data and disables everything except the login.                                                                                                                        |
+| `DEMO`                 | `false`       | <Badge variant="gray">Optional</Badge>     | Demo mode: seeds demo data, adds a one-click demo login and makes everything read-only.                                                                                                     |
+| `ALLOW_DOWNGRADE`      | `false`       | <Badge variant="gray">Optional</Badge>     | Roll back database migrations of a newer OrcaCD version on start. See [Downgrading](/docs/setup/upgrading#downgrading).                                                                     |
 
 ## Agent
 

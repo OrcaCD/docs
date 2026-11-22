@@ -1,8 +1,14 @@
+import type { Document } from "fumadocs-openapi";
 import { createOpenAPI } from "fumadocs-openapi/server";
 
-// Written by scripts/generate-api-reference.ts from the spec on the main branch of orca-cd
-export const openapi = createOpenAPI({
-	input: { orcacd: "./openapi.json" },
-	// The pages load the document once through the docs route instead
-	includeDocument: false,
-});
+declare const __ORCA_OPENAPI_DOCUMENT__: Document;
+
+export function createOrcaOpenAPI(document: () => Document) {
+	return createOpenAPI({
+		input: { orcacd: document },
+		// The pages load the document once through the docs route.
+		includeDocument: false,
+	});
+}
+
+export const openapi = createOrcaOpenAPI(() => __ORCA_OPENAPI_DOCUMENT__);

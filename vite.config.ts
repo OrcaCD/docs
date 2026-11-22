@@ -6,6 +6,7 @@ import { globSync } from "node:fs";
 import { sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
+import { generateApiReference } from "./scripts/generate-api-reference.ts";
 
 function collectLlmDocPages(baseDir: string): string[] {
 	const pages: string[] = [];
@@ -27,11 +28,17 @@ function collectLlmDocPages(baseDir: string): string[] {
 	return pages;
 }
 
-const llmDocPages = [
-	...new Set(collectLlmDocPages(fileURLToPath(new URL("./content/docs", import.meta.url)))),
-].sort((a, b) => a.localeCompare(b));
+function getLlmDocPages() {
+	const docsDir = fileURLToPath(new URL("./content/docs", import.meta.url));
+	return [...new Set(collectLlmDocPages(docsDir))].sort((a, b) => a.localeCompare(b));
+}
 
-export default defineConfig({
+export default defineConfig(async ({ isPreview }) => ({
+	// Generate the MDX once and use the same spec across build environments.
+	builder: { sharedConfigBuild: true },
+	define: isPreview
+		? undefined
+		: { __ORCA_OPENAPI_DOCUMENT__: JSON.stringify(await generateApiReference()) },
 	server: {
 		port: 3000,
 	},
@@ -70,7 +77,7 @@ export default defineConfig({
 				{
 					path: "/sitemap.xml",
 				},
-				...llmDocPages.map((path) => ({ path })),
+				...getLlmDocPages().map((path) => ({ path })),
 			],
 		}),
 		react(),
@@ -81,4 +88,4 @@ export default defineConfig({
 			tslib: "tslib/tslib.es6.js",
 		},
 	},
-});
+}));

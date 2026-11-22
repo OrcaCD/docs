@@ -6,6 +6,10 @@ on:
 permissions:
   contents: read
 
+env:
+  # Used only while the OpenAPI export from OrcaCD/orca-cd#576 is absent from main.
+  OPENAPI_FALLBACK_URL: https://raw.githubusercontent.com/OrcaCD/orca-cd/2564c149a23aa32375db3e36b83ce116a8282469/backend/openapi.json
+
 jobs:
   quality:
     runs-on: ubuntu-latest

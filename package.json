@@ -4,8 +4,8 @@
 	"type": "module",
 	"sideEffects": false,
 	"scripts": {
-		"dev": "node --run generate:api && vite dev",
-		"build": "node --run generate:api && vite build",
+		"dev": "vite dev",
+		"build": "vite build",
 		"start": "vite preview",
 		"types:check": "node --run generate:api && fumadocs-mdx && tsc --noEmit",
 		"postinstall": "fumadocs-mdx",

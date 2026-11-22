@@ -13,11 +13,10 @@
 		"...guides",
 		"---[Pickaxe]Advanced---",
 		"...advanced",
-		"---[Braces]API Reference---",
-		"...api-reference",
 		"---[Bug]Troubleshooting---",
 		"...troubleshooting",
 		"---[HandHelping]Helping Out---",
-		"...helping-out"
+		"...helping-out",
+		"api-reference"
 	]
 }

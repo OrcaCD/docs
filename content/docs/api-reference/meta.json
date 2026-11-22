@@ -1,4 +1,5 @@
 {
 	"title": "API Reference",
+	"root": "api-reference",
 	"pages": ["index", "..."]
 }

@@ -4,6 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { staticFunctionMiddleware } from "@tanstack/start-static-server-functions";
 import { useFumadocsLoader } from "fumadocs-core/source/client";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
+import { FullSearchTrigger, SearchTrigger } from "fumadocs-ui/layouts/shared/slots/search-trigger";
 import {
 	DocsBody,
 	DocsDescription,
@@ -14,8 +15,8 @@ import {
 	ViewOptionsPopover,
 } from "fumadocs-ui/layouts/docs/page";
 import defaultMdxComponents from "fumadocs-ui/mdx";
-import { baseOptions } from "@/lib/layout.shared";
-import { getPageMarkdownUrl, source } from "@/lib/source";
+import { apiReferenceUrl, baseOptions } from "@/lib/layout.shared";
+import { getDocsNavigationTree, getPageMarkdownUrl, source } from "@/lib/source";
 import { Suspense } from "react";
 import type { Document } from "fumadocs-openapi";
 import { OpenAPIPage } from "@/components/api-page";
@@ -25,6 +26,12 @@ import { Badge } from "@/components/badge";
 import { Checklist, ChecklistItem } from "@/components/checklist";
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import { BookOpen, Braces } from "lucide-react";
+
+const docsTabs = [
+	{ title: "Documentation", url: "/docs", icon: <BookOpen className="size-full" /> },
+	{ title: "API Reference", url: apiReferenceUrl, icon: <Braces className="size-full" /> },
+];
 
 export const Route = createFileRoute("/docs/$")({
 	component: Page,
@@ -75,7 +82,7 @@ const loader = createServerFn({
 		return {
 			path: page.path,
 			markdownUrl: getPageMarkdownUrl(page).url,
-			pageTree: await source.serializePageTree(source.getPageTree()),
+			pageTree: await source.serializePageTree(getDocsNavigationTree()),
 			// The IDs of the OpenAPI documents an API reference page shows
 			openapiDocuments: (page.data._openapi?.preload as string[] | undefined) ?? [],
 		};
@@ -138,7 +145,14 @@ function Page() {
 	const { path, pageTree, markdownUrl, openapiDocs } = useFumadocsLoader(Route.useLoaderData());
 
 	return (
-		<DocsLayout {...baseOptions()} tree={pageTree} githubUrl="https://github.com/OrcaCD/orca-cd">
+		<DocsLayout
+			{...baseOptions()}
+			tree={pageTree}
+			tabs={docsTabs}
+			githubUrl="https://github.com/OrcaCD/orca-cd"
+			slots={{ searchTrigger: { sm: SearchTrigger, full: () => null } }}
+			sidebar={{ banner: <FullSearchTrigger hideIfDisabled /> }}
+		>
 			<Suspense>{clientLoader.useContent(path, { markdownUrl, path, openapiDocs })}</Suspense>
 		</DocsLayout>
 	);

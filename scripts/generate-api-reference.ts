@@ -58,6 +58,15 @@ function checkReferences(value: unknown): void {
 
 export async function generateApiReference(): Promise<Document> {
 	const document = await downloadSpec();
+	const tags = (document.tags ??= []);
+	const apiTokens = { name: "API tokens", "x-displayName": "API Tokens" };
+	const apiTokensTag = tags.find((tag) => tag.name === apiTokens.name);
+	if (apiTokensTag) {
+		Object.assign(apiTokensTag, apiTokens);
+	} else {
+		tags.push(apiTokens);
+	}
+
 	await generateFiles({
 		input: createOrcaOpenAPI(() => document),
 		output,

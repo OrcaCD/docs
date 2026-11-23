@@ -10,6 +10,7 @@ OrcaCD supports triggering deployments directly from GitHub Actions using [GitHu
 - A GitHub repository connected in OrcaCD with provider type **GitHub**
 - **GitHub Actions Access** enabled in the sync settings of the repository in OrcaCD
 - The OrcaCD Hub must be reachable from GitHub's network.
+- To wait for deployment results, use a deploy-action version or commit that supports `wait` and a Hub that supports deployment tracking.
 
 ## Example Workflow
 
@@ -23,7 +24,8 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: OrcaCD/deploy-action@... # Replace ... with the latest version or hash
+      - id: deploy
+        uses: OrcaCD/deploy-action@... # Replace ... with the latest version or hash
         with:
           # The OrcaCD hub URL, must match the APP_URL of the hub
           # Required
@@ -37,9 +39,32 @@ jobs:
           # even if the compose file has not changed
           # Optional, default: false
           pullImages: false
+
+          # Wait for the deployment results (default: true)
+          wait: true
+
+          # Maximum time to wait for deployment results in seconds (default: 600)
+          timeout: 600
 ```
 
 At least one of `syncRepo` or `pullImages` must be set to `true`, otherwise the action fails.
+
+## Deployment Results
+
+With `wait` enabled, the action waits for all triggered applications to finish. The GitHub Actions job summary reports the result for each application and operation, including commit syncs, image updates, and automatic rollbacks. It shows the commit and any error when available. An application can also be reported as `skipped`, for example when auto-sync is paused after a rollback.
+
+The step fails if any deployment fails or triggers an automatic rollback, even if the rollback succeeds. The rollback result shows which commit was restored when that information is available.
+
+Set `timeout` in seconds. It must exceed the longest [health gate timeout](/docs/advanced/architecture/rollbacks#automatic-rollback) configured for the triggered applications. Allow extra time for queuing, deployment, and any rollback. If the wait times out, the step fails and the deployment may still be running in OrcaCD.
+
+Set `wait: false` to finish the step as soon as the Hub accepts the request. Older Hubs that omit `triggerId` use the same behavior even when `wait` is enabled. In either case, a successful step confirms that the Hub accepted the trigger. Check OrcaCD for the deployment result.
+
+### Outputs
+
+| Output      | Description                                                                                                                                                                  |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `triggerId` | The Hub's identifier for the trigger, when returned. With the example step ID, access it as `steps.deploy.outputs.triggerId`.                                                |
+| `status`    | `succeeded`, `failed`, or `timeout` when waiting. `triggered` means the Hub accepted the request and the action skipped polling. Access it as `steps.deploy.outputs.status`. |
 
 ## Restricting Access
 
@@ -64,3 +89,7 @@ When a GitHub Actions workflow runs, it requests a short-lived OIDC token from G
 2. The workflow was **not** triggered by a `pull_request` or `pull_request_target` event (to prevent untrusted forks from triggering deployments).
 
 If verification succeeds, OrcaCD finds all applications linked to the matching repository and branch, then dispatches the requested actions. For runs triggered by a tag, OrcaCD uses all branches that contain the tagged commit. With `syncRepo`, the exact commit of the workflow run is deployed, not the latest commit of the branch.
+
+`POST /api/v1/github-actions` returns a `message` and, on Hubs that support tracking, a `triggerId` and an `applications` list with each application's `id` and `name`. When waiting, the action polls `GET /api/v1/github-actions/triggers/:id` with a fresh GitHub OIDC token for each request. The Hub only returns the result to a token whose `repository` and `run_id` claims match the trigger.
+
+The status response includes an overall `status` (`running`, `failed`, or `succeeded`) and an `applications` list. Each application has an `id`, `name`, `status` (which can also be `skipped`), and `events`. Events include a `type` (`commit_sync`, `image_update`, or `rollback`) and `status`, with `source`, `commit`, or `error` when available.

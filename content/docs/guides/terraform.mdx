@@ -1,0 +1,65 @@
+---
+title: Terraform and OpenTofu
+description: Manage OrcaCD repositories, applications, notifications, and agents as code
+---
+
+The `orcacd/orcacd` provider manages Git repositories, Compose applications, notification subscriptions, and agents on your OrcaCD Hub. It can also look up resources by ID or name and import resources that already exist in OrcaCD.
+
+## Connect to the Hub
+
+Use an OrcaCD Hub with [API token support](/docs/advanced/api-tokens). Create a token under **Settings → API Tokens** with scopes for the resources and operations your configuration needs. For the example below, allow Terraform to read agents and to manage repositories and applications. Repository access must include reads because registering an application requires reading its source.
+
+Set `ORCACD_URL` to your Hub's base URL and `ORCACD_TOKEN` to the API token. In CI, supply the token through your secret store.
+
+```bash
+export ORCACD_URL="https://orcacd.example.com"
+```
+
+## Register a Compose application
+
+The example uses an existing agent called `docker-host`. Replace the agent name and repository URL with yours. The `main` branch must contain `compose.yaml`.
+
+```hcl
+terraform {
+  required_providers {
+    orcacd = {
+      source = "orcacd/orcacd"
+    }
+  }
+}
+
+data "orcacd_agent" "docker" {
+  name = "docker-host"
+}
+
+resource "orcacd_repository" "stack" {
+  url          = "https://github.com/example/compose-stacks"
+  git_provider = "github"
+  sync_type    = "manual"
+}
+
+resource "orcacd_application" "stack" {
+  name          = "example-stack"
+  repository_id = orcacd_repository.stack.id
+  agent_id      = data.orcacd_agent.docker.id
+  branch        = "main"
+  path          = "compose.yaml"
+}
+```
+
+Once the provider is available in your registry, run `terraform init`, `terraform plan`, and `terraform apply`. With OpenTofu, use `tofu` for the same commands. For deployments, constrain the provider version in `required_providers` and commit `.terraform.lock.hcl`. To try an unreleased provider, follow the [local build instructions](https://github.com/OrcaCD/terraform-provider-orcacd#try-a-local-build).
+
+The application resource manages the registration. Manage settings such as image polling and rollback in OrcaCD. Keep the agent connected while destroying or moving the application so the Hub can remove its previous deployment.
+
+## Import an existing resource
+
+Write a resource block that matches the existing object. Find its ID in OrcaCD or with the corresponding provider data source, then replace `APPLICATION_ID` below. Run a plan after importing to review any differences.
+
+```bash
+terraform import orcacd_application.stack APPLICATION_ID
+terraform plan
+```
+
+Agents, repositories, and notifications can be imported the same way. The Hub displays agent tokens only when issued. Leave notification `config_json` omitted when adopting an existing notification because the Hub keeps that configuration private. Agent tokens and notification credentials created through Terraform can be stored in its state, so restrict access to state and saved plans.
+
+See the [provider reference](https://github.com/OrcaCD/terraform-provider-orcacd/tree/main/docs) for the schema and the [quickstart](https://github.com/OrcaCD/terraform-provider-orcacd/tree/main/examples/quickstart) for an example including a notification.

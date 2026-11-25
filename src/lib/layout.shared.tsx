@@ -10,6 +10,8 @@ import { GitHubRelease } from "@/components/github-release";
 import { GithubInfo } from "@/components/github-info";
 import { useNavigate } from "@tanstack/react-router";
 
+export const apiReferenceUrl = "/docs/api-reference";
+
 export function baseOptions(): BaseLayoutProps {
 	const navigate = useNavigate();
 
@@ -82,6 +84,10 @@ export const navbarLinks: LinkItemType[] = [
 				</NavbarMenuContent>
 			</NavbarMenu>
 		),
+	},
+	{
+		text: "API Reference",
+		url: apiReferenceUrl,
 	},
 	{
 		type: "custom",

@@ -134,6 +134,14 @@ hub reset-passkeys --id <user-id>
 
 Exactly one of `--email` or `--id` must be provided. Users that only log in via SSO can not be reset.
 
+### openapi
+
+Prints the [OpenAPI spec](/docs/api-reference) of the REST API of this Hub version as JSON. It needs no configuration or database.
+
+```bash
+docker compose exec hub /app/hub openapi > openapi.json
+```
+
 ### version
 
 Prints the version of the Hub. Also available as `--version`/`-v`.

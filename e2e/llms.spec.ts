@@ -14,6 +14,23 @@ test("llms-full.txt contains the page contents", async ({ request }) => {
 	expect(await response.text()).toContain("# Installation (/docs/setup/installation)");
 });
 
+test("exports an API operation with its parameters and response schema", async ({ request }) => {
+	const path = "/docs/api-reference/applications/deploy-application";
+	const response = await request.get(`/llms.mdx${path}/content.md`);
+
+	expect(response.ok()).toBe(true);
+	const markdown = await response.text();
+	expect(markdown).toContain(`# Deploy an application (${path})`);
+	expect(markdown).toContain("POST /applications/{id}/deploy");
+	expect(markdown).toContain("Deploys the current compose file again.");
+	expect(markdown).toContain('"in": "path"');
+	expect(markdown).toContain('"#/components/schemas/MessageOutputBody": {');
+	expect(markdown).not.toContain("<OpenAPIPage");
+
+	const full = await request.get("/llms-full.txt");
+	expect(await full.text()).toContain(markdown);
+});
+
 test("every docs page has a markdown version", async ({ request }) => {
 	const docsPaths = (await getSitemapPaths(request)).filter((path) => path.startsWith("/docs"));
 

@@ -2,6 +2,7 @@ import { docs } from "fumadocs-mdx:collections/server";
 import { InferPageType, loader } from "fumadocs-core/source";
 import { lucideIconsPlugin } from "fumadocs-core/source/lucide-icons";
 import { openapi } from "@/lib/openapi";
+import { getApiMarkdown } from "@/lib/openapi-markdown";
 
 export const source = loader({
 	source: docs.toFumadocsSource(),
@@ -40,7 +41,9 @@ export function getPageMarkdownUrl(page: InferPageType<typeof source>) {
 }
 
 export async function getLLMText(page: InferPageType<typeof source>) {
-	const processed = await page.data.getText("processed");
+	const processed = page.data._openapi
+		? await getApiMarkdown(page.path)
+		: await page.data.getText("processed");
 
 	return `# ${page.data.title} (${page.url})
 

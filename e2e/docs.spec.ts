@@ -74,6 +74,18 @@ test("shows colored HTTP methods in the API Tokens sidebar group", async ({ page
 	expect(getColor).not.toBe(postColor);
 });
 
+test("uses an example hub URL and offers Markdown on generated API pages", async ({ page }) => {
+	await page.goto("/docs/api-reference/api-tokens/list-api-tokens");
+	await waitForHydration(page);
+
+	await expect(
+		page.getByText("https://orca.example.com/api/v1", { exact: false }).first(),
+	).toBeVisible();
+	await page.getByRole("button", { name: "Open", exact: true }).click();
+	await expect(page.getByRole("link", { name: "View as Markdown" })).toBeVisible();
+	await expect(page.getByRole("link", { name: "Open in GitHub", exact: true })).toHaveCount(0);
+});
+
 test("toggles the color theme", async ({ page, isMobile }) => {
 	test.skip(isMobile, "The theme toggle lives in the collapsed sidebar on mobile");
 	await page.goto("/docs");

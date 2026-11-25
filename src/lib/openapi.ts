@@ -3,6 +3,8 @@ import { createOpenAPI } from "fumadocs-openapi/server";
 
 declare const __ORCA_OPENAPI_DOCUMENT__: Document;
 
+export const apiReferencePageOptions = { per: "operation", groupBy: "tag" } as const;
+
 export function createOrcaOpenAPI(document: () => Document) {
 	return createOpenAPI({
 		input: { orcacd: document },

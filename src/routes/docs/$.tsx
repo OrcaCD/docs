@@ -59,13 +59,20 @@ const getOpenAPIDocument = createServerFn({
 	.middleware([staticFunctionMiddleware])
 	.handler(async ({ data: id }) => (await openapi.getSchema(id)).bundled);
 
-function loadOpenAPIDocument(id: string) {
-	let document = openapiDocuments.get(id);
-	if (!document) {
-		document = getOpenAPIDocument({ data: id });
-		openapiDocuments.set(id, document);
+async function loadOpenAPIDocument(id: string) {
+	const cached = openapiDocuments.get(id);
+	if (cached) {
+		return cached;
 	}
-	return document;
+
+	const document = getOpenAPIDocument({ data: id });
+	openapiDocuments.set(id, document);
+	try {
+		return await document;
+	} catch (error) {
+		openapiDocuments.delete(id);
+		throw error;
+	}
 }
 
 const loader = createServerFn({
@@ -115,7 +122,11 @@ const clientLoader = browserCollections.docs.createClientLoader({
 					<MarkdownCopyButton markdownUrl={markdownUrl} />
 					<ViewOptionsPopover
 						markdownUrl={markdownUrl}
-						githubUrl={`https://github.com/OrcaCD/docs/blob/main/content/docs/${path}`}
+						githubUrl={
+							Object.keys(openapiDocs).length > 0
+								? undefined
+								: `https://github.com/OrcaCD/docs/blob/main/content/docs/${path}`
+						}
 					/>
 				</div>
 				<DocsBody>

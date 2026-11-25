@@ -1,0 +1,117 @@
+---
+title: AI Agents
+description: Connect AI coding agents like Claude Code and Codex to OrcaCD with skills and the MCP server
+---
+
+OrcaCD works with AI coding agents in two ways:
+
+- **Skills** teach the agent how OrcaCD works: how compose files have to look to pass the [deployment policy](/docs/advanced/security#compose-deployment-policy), how to fix a failed deploy and how to set up or migrate to OrcaCD. They work offline in your GitOps repository and need no connection to the Hub.
+- **The MCP server** of the Hub gives the agent access to your OrcaCD: it can list applications and agents, read the compose file, warnings and deploy errors of an application, and deploy it after showing you a preview.
+
+Both are part of the OrcaCD plugin for Claude Code and Codex from the [OrcaCD/skills](https://github.com/OrcaCD/skills) repository.
+
+<Callout>The MCP server is available since OrcaCD v0.6.0.</Callout>
+
+## Installing the Plugin
+
+```bash tab="Claude Code"
+/plugin marketplace add OrcaCD/skills
+/plugin install orcacd@orcacd
+```
+
+```bash tab="Codex"
+codex plugin marketplace add OrcaCD/skills
+codex plugin add orcacd@orcacd
+```
+
+```bash tab="Other agents"
+# Cursor, OpenCode, Gemini CLI and other agents that support Agent Skills
+npx skills add OrcaCD/skills
+```
+
+The plugin is updated with every change in the repository. Run `/plugin marketplace update orcacd` in Claude Code or `codex plugin marketplace upgrade orcacd` in Codex to get the latest version.
+
+## Skills
+
+| Skill                   | Use it to                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------- |
+| `writing-compose-files` | Write or review compose files and the repository layout, so they pass the deployment policy |
+| `fixing-failed-deploys` | Find the cause of a failed, rolled back or unhealthy application and fix it                 |
+| `setting-up-orcacd`     | Install the Hub and an Agent, connect a repository and the MCP server                       |
+| `migrating-to-orcacd`   | Move manual `docker compose` stacks, Portainer stacks or Watchtower to OrcaCD               |
+
+The agent loads a skill on its own when your request matches it, e.g. "Write a compose file for Nextcloud that I can deploy with OrcaCD" or "My OrcaCD deploy failed, why?".
+
+## Connecting to the MCP Server
+
+The Hub serves the MCP server at `https://orcacd.example.com/api/v1/mcp` (with your `APP_URL`). It uses the streamable HTTP transport, so there is nothing to install.
+
+### Claude Code
+
+When you install the plugin, Claude Code asks for the URL of your Hub, e.g. `https://orcacd.example.com`. You can also set it later with `/plugin configure orcacd@orcacd`. Then run `/mcp`, select the `orcacd` server and authenticate.
+
+Without the plugin, add the server yourself:
+
+```bash
+claude mcp add --transport http orcacd https://orcacd.example.com/api/v1/mcp
+```
+
+### Codex
+
+Codex plugins can't ask for the URL of your Hub, so add the server yourself:
+
+```bash
+codex mcp add orcacd --url https://orcacd.example.com/api/v1/mcp
+```
+
+Codex starts the login right away. Run `codex mcp login orcacd` to log in again later.
+
+### Other Clients
+
+Add `https://orcacd.example.com/api/v1/mcp` as a remote MCP server. Clients that support OAuth open OrcaCD to log in. For clients without OAuth, create an API token under **Settings → API Tokens** and send it as `Authorization: Bearer <token>` header.
+
+## Login and Permissions
+
+When a client connects for the first time, OrcaCD opens in your browser. Log in, check the name of the client and choose what it may do:
+
+| Scope                | Allows the agent to                                                        |
+| -------------------- | -------------------------------------------------------------------------- |
+| `application:read`   | List applications and read their compose file, status, warnings and errors |
+| `agent:read`         | List Agents and their status                                               |
+| `application:deploy` | Preview and deploy applications                                            |
+
+The agent can never do more than your own role allows, and your role needs the permission to create API tokens.
+
+The client gets an API token that only works for the MCP server. It shows up with an **App** badge under **Settings → API Tokens**, where you can revoke it at any time. The token is renewed automatically and expires when the client hasn't used it for 30 days.
+
+## Tools
+
+| Tool                 | Scope                | Description                                                                                             |
+| -------------------- | -------------------- | ------------------------------------------------------------------------------------------------------- |
+| `list_applications`  | `application:read`   | Lists the applications with their sync and health status, Agent and last sync error                     |
+| `get_application`    | `application:read`   | Returns an application with its compose file, compose warnings, last sync error and recent events       |
+| `list_agents`        | `agent:read`         | Lists the Agents with their status and versions                                                         |
+| `preview_deploy`     | `application:deploy` | Shows the diff between the running compose file and the one that would be deployed, plus warnings       |
+| `deploy_application` | `application:deploy` | Deploys the application, like the **Deploy** button. Needs the `previewId` returned by `preview_deploy` |
+
+### Deploying with an Agent
+
+An agent can only deploy what it showed you before. `deploy_application` needs the `previewId` of a `preview_deploy` call, and OrcaCD refuses the deploy when:
+
+- the application changed since the preview, e.g. a new commit or another Agent,
+- the preview is older than 10 minutes,
+- the preview was already used or belongs to another user.
+
+`deploy_application` is marked as destructive, so most clients ask you to confirm it as well. The deploy runs in the background and is recorded in the history of the application like a manual deploy.
+
+The MCP server deploys the commit OrcaCD already knows. It doesn't sync the repository, so after pushing a fix, wait for the [sync](/docs/advanced/architecture/repositories#sync-strategies) or click **Sync repository** on the details page of the application.
+
+## Disabling the MCP Server
+
+Set `DISABLE_MCP=true` in the `.env` file of the Hub to turn the MCP server off. The endpoint then returns `404`. See [environment variables](/docs/configuration/env-variables#hub).
+
+## Troubleshooting
+
+- **The client can't log in:** The OAuth metadata uses `APP_URL`, so it must be the URL the client uses. If your reverse proxy only forwards some paths, also forward `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server` to the Hub.
+- **Tools are missing:** The client only sees the tools of the scopes you approved. Revoke the token under **Settings → API Tokens** and connect again to choose other scopes.
+- **`404` from `/api/v1/mcp`:** The MCP server is disabled with `DISABLE_MCP`, or the Hub runs in demo mode.

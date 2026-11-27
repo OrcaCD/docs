@@ -1,0 +1,51 @@
+---
+title: Additional Deployment Files
+description: Deploy configuration files from Git alongside your Docker Compose file
+---
+
+Use **Additional files** to deploy files from your Git repository alongside your Compose file. For example, if your Compose file is at `apps/web/compose.yaml`, selecting `apps/web/config/nginx.conf` puts it at `./config/nginx.conf` relative to the deployed Compose file.
+
+## Mount an Nginx configuration file
+
+Commit this Compose file as `apps/web/compose.yaml`:
+
+```yaml
+services:
+  web:
+    image: nginx:alpine
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+```
+
+Commit the configuration as `apps/web/config/nginx.conf`:
+
+```nginx
+events {}
+
+http {
+  server {
+    listen 80;
+    location / {
+      return 200 "Hello from OrcaCD\n";
+    }
+  }
+}
+```
+
+1. In **Applications → New Application**, choose your repository, branch and Compose file.
+2. Under **Additional files**, open **Browse files**. Navigate into `config` or search for `nginx.conf`, then select it. The selected path appears as `./config/nginx.conf`.
+3. Finish creating the application. OrcaCD copies the selected file before starting Docker Compose.
+
+For an existing application, change the selection in **Settings → General**. Save and click **Deploy** to apply your changes right away.
+
+## Sync and rollback
+
+The Hub fetches the Compose file and all selected files from the same commit. Changing only a selected file triggers a deployment when the repository syncs. If a selected file is missing or can't be fetched, the sync reports the path and leaves the running deployment in place.
+
+When you deselect a file, OrcaCD removes its managed copy on the next successful deployment. Update any Compose references to that file as well. A [rollback](/docs/advanced/architecture/rollbacks) restores the selected files and their contents from the target deployment.
+
+## Limits and file ownership
+
+- An application can select up to 64 files totaling 8 MiB. Select individual files from the directory containing the Compose file or its subdirectories.
+- OrcaCD reserves the deployed Compose file, its generated override and the root `.env` file. The Agent rejects a selection that would overwrite an existing unmanaged file at the destination.
+- Use an Agent version that supports additional deployment files when deploying or removing them.

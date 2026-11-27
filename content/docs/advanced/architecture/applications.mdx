@@ -15,7 +15,7 @@ The **Overview** page shows the status of all applications, recent deployments a
 
 Navigate to the **Applications** page, click **New Application** and select the Agent, the repository, the branch and the Compose file. The name must be unique per Agent, because the Docker Compose project name is derived from it.
 
-OrcaCD reads the Compose file from the latest commit of the branch and immediately deploys it to the selected Agent.
+OrcaCD reads the Compose file from the latest commit of the branch and immediately deploys it to the selected Agent. Use [Additional files](/docs/guides/additional-files) to include configuration files or other files from the same commit.
 
 ## Application Details
 
@@ -62,18 +62,18 @@ The **Health** page shows how available the application was over the last 24 hou
 
 ## Triggering a Deployment
 
-OrcaCD automatically deploys when the tracked repository branch receives a new commit that changes the Compose file (depending on the repository sync strategy), and when image polling or the image pull webhook detects a new image. You can also trigger a deployment manually from the details page:
+OrcaCD automatically deploys when the tracked repository branch receives a new commit that changes the Compose file or a selected additional file (depending on the repository sync strategy), and when image polling or the image pull webhook detects a new image. You can also trigger a deployment manually from the details page:
 
 | Action              | Description                                                                                                                            |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| **Deploy**          | Redeploys the current Compose file without syncing the repository                                                                      |
+| **Deploy**          | Redeploys the current Compose file and selected additional files without syncing the repository                                        |
 | **Sync repository** | Available in the dropdown next to **Deploy**. Fetches the latest commit and deploys the changes to all applications of this repository |
 | **Pull images**     | Available in the dropdown next to **Deploy**. Pulls the latest images and redeploys only if an image changed                           |
 
 <Callout>
 	The Agent must be online to deploy. If it is offline, the deployment fails immediately and the
-	application is marked `Out of Sync` with an error. Deployments are not queued or retried
-	automatically, so trigger the deployment again once the Agent is back online.
+	application is marked `Out of Sync` with an error. For a manual deployment, click **Deploy** again
+	once the Agent is back online.
 </Callout>
 
 ## History
@@ -88,9 +88,9 @@ You can switch between a table and a timeline view. The search filters the histo
 
 ### General
 
-Change the name, icon, Agent, repository, branch and Compose file of the application, or delete it.
+Change the name, icon, Agent, repository, branch, Compose file and additional files of the application, or delete it.
 
-Saving does not deploy the application. If you change the Compose file, the Agent or the name, a notification with a **Deploy** button appears so you can apply the changes right away.
+Saving does not deploy the application. If you change the Compose file, the additional file selection, the Agent or the name, a notification with a **Deploy** button appears so you can apply the changes right away.
 
 ![Deploy prompt after saving changes](/assets/docs/deploy-after-edit-toast.png?url)
 

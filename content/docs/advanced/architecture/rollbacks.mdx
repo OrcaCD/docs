@@ -3,11 +3,12 @@ title: Rollbacks
 description: Roll back an application to an earlier deployment, manually or automatically
 ---
 
-OrcaCD remembers the last 10 successful deployments of every application, including the Compose file and the exact image of every service. If a new version breaks your application, you can go back to one of them.
+OrcaCD remembers the last 10 successful deployments of every application, including the Compose file, any [additional deployment files](/docs/guides/additional-files) and the exact image of every service. If a new version breaks your application, you can go back to one of them.
 
 <Callout type="warn">
-	A rollback only restores the Compose file and the images. Volumes and data migrations are **not**
-	rolled back, so a new version that already migrated your database may not work with the old one.
+	A rollback restores the Compose file, the additional deployment files and the images. Volumes and
+	data migrations stay as they are, so a new version that already migrated your database may not
+	work with the old one.
 </Callout>
 
 ## Manual Rollback

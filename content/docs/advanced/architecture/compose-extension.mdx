@@ -1,0 +1,79 @@
+---
+title: Compose Extension
+description: Keep the settings of an application in its Compose file with x-orcacd
+---
+
+The settings of an application can live in its Compose file, next to the services they belong to. Add an `x-orcacd` block at the top level of the file, and OrcaCD applies it on every sync. Docker Compose ignores fields that start with `x-`, so the file still works with a plain `docker compose up`.
+
+```yaml title="compose.yaml"
+x-orcacd:
+  icon: globe
+  image-poll:
+    enabled: true
+    interval: 5m
+  delete-old-images: true
+  rollback:
+    enabled: true
+    health-timeout: 5m
+  release-age:
+    minimum: 3d
+
+services:
+  web:
+    image: ghcr.io/acme/web:1.4.2
+```
+
+## Managed Settings
+
+A setting in `x-orcacd` is managed by Git:
+
+- In the UI, it is read-only and marked with **Set in the compose file with `x-orcacd`**.
+- The API answers `409 Conflict` when a request changes it. Requests that send the current value, like the Terraform provider does, still work.
+- When you remove it from the file, it goes back to its default with the next sync, and you can change it in the UI again.
+
+Settings that are not in `x-orcacd` keep their value and can be changed in the UI or the API as before. So you can, for example, keep the image polling in Git and still turn rollbacks on and off in the UI.
+
+<Callout type="warn">
+	Anyone who can push to the branch of the application can change its managed settings, for example
+	turn off rollbacks or the minimum release age.
+</Callout>
+
+## Settings
+
+| Key                              | Default        | Description                                                                                                                                                                    |
+| -------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `icon`                           | `box`          | The [icon](https://lucide.dev/icons) of the application.                                                                                                                       |
+| `image-poll.enabled`             | `false`        | Turns on [image polling](/docs/advanced/architecture/applications#image-polling).                                                                                              |
+| `image-poll.interval`            | `2m`           | How often the registries are checked, between `1m` and `30d`.                                                                                                                  |
+| `delete-old-images`              | `false`        | [Deletes old images](/docs/advanced/architecture/applications#delete-old-images) after every update.                                                                           |
+| `rollback.enabled`               | `false`        | Turns on [automatic rollback](/docs/advanced/architecture/rollbacks#automatic-rollback).                                                                                       |
+| `rollback.on-deploy-failure`     | `true`         | Rolls back when the deployment fails.                                                                                                                                          |
+| `rollback.on-unhealthy`          | `true`         | Rolls back when the application isn't healthy within the health timeout. `on-deploy-failure` and `on-unhealthy` can't both be `false`.                                         |
+| `rollback.health-timeout`        | `5m`           | How long a deployment may take to become healthy, between `30s` and `1h`.                                                                                                      |
+| `rollback.pause-auto-sync`       | `true`         | Pauses auto-sync after a rollback.                                                                                                                                             |
+| `release-age.minimum`            | global default | The [minimum release age](/docs/advanced/architecture/applications#minimum-release-age), at most `365d`. `null` uses the global default, which also applies when it is higher. |
+| `release-age.allowed-registries` | `[]`           | Registry hosts like `registry.example.com:5000` whose images only wait for the global minimum. At most 50.                                                                     |
+
+`image-poll: true` and `rollback: true` are short for `enabled: true`.
+
+Durations are a number of seconds or a string like `90s`, `5m`, `1h30m` or `7d`.
+
+To set the minimum release age of a single service, use the `orca-cd.minimum-release-age` [label](/docs/advanced/architecture/applications#minimum-release-age) of the service.
+
+## When Settings Are Applied
+
+OrcaCD reads `x-orcacd` when you create an application, when you change its repository, branch or path, and on every sync, even if the Compose file didn't change.
+
+- **Only `x-orcacd` changed:** if the application is `Synced`, OrcaCD saves the new settings without deploying it again. Every other change to the file deploys as usual.
+- **Invalid settings:** an unknown key or an invalid value fails the sync and nothing is deployed. The error names the key, for example `x-orcacd.rollback.health-timeout: must be at most 1h`, and is shown on the application and sent as a **Sync failed** [notification](/docs/advanced/notifications). OrcaCD tries again with the next commit. Creating or editing an application with such a file fails with `422 Unprocessable Entity`.
+- **Invalid YAML or large files:** if the file isn't valid YAML or is larger than 1 MiB, OrcaCD leaves the settings as they are. An invalid file fails on the Agent as before.
+
+A [rollback](/docs/advanced/architecture/rollbacks) to an older deployment keeps the current settings from Git, even if the old Compose file had different ones.
+
+## Editor Support
+
+A JSON schema of the Compose specification with `x-orcacd` gives you autocompletion and validation in editors that use the YAML language server, such as VS Code with the Red Hat YAML extension. Add this line at the top of the Compose file:
+
+```yaml title="compose.yaml"
+# yaml-language-server: $schema=https://raw.githubusercontent.com/OrcaCD/orca-cd/main/backend/internal/hub/composeconfig/compose.schema.json
+```

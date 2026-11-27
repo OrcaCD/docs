@@ -146,16 +146,16 @@ Image updates can wait until the new image was pushed to its registry long enoug
 
 The age can be set on several levels:
 
-- **Global:** admins set the default under **Admin → Release Age**. It applies to applications that don't set their own, and it is also the least age of every application, which applications, services and labels can only raise. Images from the registries listed there are updated right away in every application.
+- **Global:** admins set the default under **Admin → Release Age**. It applies to applications that don't set their own, and it is also the least age of every application, which applications and services can only raise. Images from the registries listed there are updated right away in every application.
 - **Application:** in the **Image Updates** settings, set a minimum age or use the global default, and list registries whose images only wait for the global minimum.
-- **Service:** on the **Upcoming Updates** page of the application, or with the `orca-cd.minimum-release-age` label of the service, e.g. `0` for your own images or `7d` for a database. The label wins over the settings in the UI, but not over the global minimum. An invalid label blocks the update of the service.
+- **Service:** on the **Upcoming Updates** page of the application, or with [`release-age` in `x-orcacd`](/docs/advanced/architecture/compose-extension#service-settings) of the service in the Compose file, e.g. `0` for your own images or `7d` for a database. The global minimum still applies when it is higher.
 
 ```yaml title="compose.yaml"
 services:
   db:
     image: postgres:17
-    labels:
-      orca-cd.minimum-release-age: 7d
+    x-orcacd:
+      release-age: 7d
 ```
 
 The age is taken from the push time in the registry, not from the created date of the image, which its publisher can backdate. Docker Hub, GHCR, GitLab.com and Harbor provide a push time. For other registries, the age counts from when the Agent first saw the new image.

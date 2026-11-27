@@ -86,6 +86,12 @@ You can switch between a table and a timeline view. The search filters the histo
 
 ## Application Settings
 
+<Callout title="Settings in Git">
+	The icon, image updates and rollback settings can also be set in the Compose file with
+	[`x-orcacd`](/docs/advanced/architecture/compose-extension). Settings set there are read-only in
+	the UI.
+</Callout>
+
 ### General
 
 Change the name, icon, Agent, repository, branch and Compose file of the application, or delete it.
@@ -133,6 +139,28 @@ Click **Regenerate** to create a new secret or **Revoke** to disable the webhook
 	The Agent must be online for the image pull webhook to succeed. If the Agent is offline, the event
 	is not queued.
 </Callout>
+
+#### Minimum Release Age
+
+Image updates can wait until the new image was pushed to its registry long enough ago. This gives maintainers and scanners time to remove a malicious version before it is deployed. The minimum release age applies to every new image found by image polling, a manual image pull or the image pull webhook. A commit that changes an image in the Compose file is deployed right away.
+
+The age can be set on several levels:
+
+- **Global:** admins set the default under **Admin → Release Age**. It applies to applications that don't set their own, and it is also the least age of every application, which applications and services can only raise. Images from the registries listed there are updated right away in every application.
+- **Application:** in the **Image Updates** settings, set a minimum age or use the global default, and list registries whose images only wait for the global minimum.
+- **Service:** on the **Upcoming Updates** page of the application, or with [`release-age` in `x-orcacd`](/docs/advanced/architecture/compose-extension#service-settings) of the service in the Compose file, e.g. `0` for your own images or `7d` for a database. The global minimum still applies when it is higher.
+
+```yaml title="compose.yaml"
+services:
+  db:
+    image: postgres:17
+    x-orcacd:
+      release-age: 7d
+```
+
+The age is taken from the push time in the registry, not from the created date of the image, which its publisher can backdate. Docker Hub, GHCR, GitLab.com and Harbor provide a push time. For other registries, the age counts from when the Agent first saw the new image.
+
+The **Upcoming Updates** page lists the image of every service with its new version, its minimum age and whether the update is waiting, blocked, updated or failed.
 
 ### Environment Variables
 
